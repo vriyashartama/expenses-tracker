@@ -1,0 +1,83 @@
+@import "tailwindcss";
+
+@theme {
+  --color-forest-50: #f0f5f0;
+  --color-forest-100: #dce8dc;
+  --color-forest-200: #b8d1b8;
+  --color-forest-300: #8fb98f;
+  --color-forest-400: #6b9e6b;
+  --color-forest-500: #4a7c4a;
+  --color-forest-600: #3b633b;
+  --color-forest-700: #2d4a2d;
+  --color-forest-800: #1e321e;
+  --color-forest-900: #0f190f;
+
+  --color-moss-50: #f4f6ef;
+  --color-moss-100: #e5ebd8;
+  --color-moss-200: #ccd7b2;
+  --color-moss-300: #adbf86;
+  --color-moss-400: #8da65a;
+  --color-moss-500: #6e8740;
+  --color-moss-600: #586c33;
+  --color-moss-700: #425126;
+  --color-moss-800: #2c3619;
+  --color-moss-900: #161b0c;
+
+  --color-sand-50: #faf8f5;
+  --color-sand-100: #f5f0e8;
+  --color-sand-200: #ebe1d1;
+  --color-sand-300: #ddd0b6;
+  --color-sand-400: #c9b896;
+  --color-sand-500: #b5a078;
+  --color-sand-600: #9a8560;
+  --color-sand-700: #7a694c;
+  --color-sand-800: #5a4e38;
+  --color-sand-900: #3b3324;
+
+  --color-rosy-50: #faf5f3;
+  --color-rosy-100: #f2e5df;
+  --color-rosy-200: #e5cbbf;
+  --color-rosy-300: #d4ab99;
+  --color-rosy-400: #c08a73;
+  --color-rosy-500: #a87058;
+  --color-rosy-600: #8b5a46;
+  --color-rosy-700: #6b4535;
+  --color-rosy-800: #4b3025;
+  --color-rosy-900: #2b1b15;
+
+  --color-midnight-50: #eef3f4;
+  --color-midnight-100: #d4e2e5;
+  --color-midnight-200: #a9c5cb;
+  --color-midnight-300: #7ea8b1;
+  --color-midnight-400: #538b97;
+  --color-midnight-500: #3a6e7d;
+  --color-midnight-600: #2e5864;
+  --color-midnight-700: #23424b;
+  --color-midnight-800: #172c32;
+  --color-midnight-900: #0c1619;
+
+  --font-sans: 'Inter', 'SF Pro Display', system-ui, -apple-system, sans-serif;
+}
+
+@layer base {
+  body {
+    @apply bg-forest-900 text-sand-100 antialiased;
+    margin: 0;
+  }
+
+  * {
+    @apply border-forest-700;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-forest-800;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-forest-600 rounded-full;
+  }
+}
