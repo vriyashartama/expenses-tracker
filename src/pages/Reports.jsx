@@ -112,7 +112,7 @@ export default function Reports() {
         <div className="flex items-center gap-2 mb-6">
           <Scale size={18} className="text-moss-400" />
           <h3 className="text-lg font-bold text-sand-200">Financial Summary</h3>
-          <Badge color="#6b9e6b">
+          <Badge color="#f0a83a">
             {reportType === 'monthly'
               ? format(new Date(selectedMonth + '-01'), 'MMMM yyyy')
               : String(selectedYear)}

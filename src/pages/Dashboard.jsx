@@ -28,7 +28,7 @@ import StatValue from '../components/atoms/StatValue';
 import MonthPicker from '../components/molecules/MonthPicker';
 import AccountCard from '../components/molecules/AccountCard';
 
-const PIE_COLORS = ['#c08a73', '#a87058', '#3a6e7d', '#8da65a', '#b5a078', '#6b9e6b', '#538b97'];
+const PIE_COLORS = ['#d07e6a', '#b86450', '#538ba0', '#7ea8b8', '#9a8b72', '#f0a83a', '#e8932a'];
 
 function CustomTooltip({ active, payload }) {
   if (!active || !payload?.length) return null;
@@ -146,9 +146,9 @@ export default function Dashboard() {
           <h3 className="text-sm font-semibold text-sand-300 mb-4">Budget Allocation</h3>
           <div className="grid grid-cols-3 gap-4">
             {[
-              { label: 'Expenses', pct: pct.expenses, color: '#c08a73' },
-              { label: 'Savings', pct: pct.savings, color: '#3a6e7d' },
-              { label: 'Investments', pct: pct.investments, color: '#8da65a' },
+              { label: 'Expenses', pct: pct.expenses, color: '#d07e6a' },
+              { label: 'Savings', pct: pct.savings, color: '#538ba0' },
+              { label: 'Investments', pct: pct.investments, color: '#7ea8b8' },
             ].map(({ label, pct: p, color }) => (
               <div key={label} className="text-center">
                 <div className="relative w-16 h-16 mx-auto mb-2">
@@ -156,7 +156,7 @@ export default function Dashboard() {
                     <path
                       d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                       fill="none"
-                      stroke="#1e321e"
+                      stroke="#22262f"
                       strokeWidth="3"
                     />
                     <path
@@ -259,24 +259,24 @@ export default function Dashboard() {
             <AreaChart data={trendData}>
               <defs>
                 <linearGradient id="incomeGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#6b9e6b" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#6b9e6b" stopOpacity={0} />
+                  <stop offset="5%" stopColor="#f0a83a" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="#f0a83a" stopOpacity={0} />
                 </linearGradient>
                 <linearGradient id="expenseGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#c08a73" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#c08a73" stopOpacity={0} />
+                  <stop offset="5%" stopColor="#d07e6a" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="#d07e6a" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#2d4a2d" />
-              <XAxis dataKey="month" tick={{ fill: '#b5a078', fontSize: 12 }} axisLine={false} />
-              <YAxis tick={{ fill: '#b5a078', fontSize: 12 }} axisLine={false} tickFormatter={(v) => `${(v / 1000000).toFixed(0)}M`} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#323744" />
+              <XAxis dataKey="month" tick={{ fill: '#9a8b72', fontSize: 12 }} axisLine={false} />
+              <YAxis tick={{ fill: '#9a8b72', fontSize: 12 }} axisLine={false} tickFormatter={(v) => `${(v / 1000000).toFixed(0)}M`} />
               <Tooltip content={<CustomTooltip />} />
               <Legend
                 wrapperStyle={{ fontSize: '12px' }}
                 formatter={(val) => <span className="text-sand-400">{val}</span>}
               />
-              <Area type="monotone" dataKey="Income" stroke="#6b9e6b" fill="url(#incomeGrad)" strokeWidth={2} />
-              <Area type="monotone" dataKey="Expenses" stroke="#c08a73" fill="url(#expenseGrad)" strokeWidth={2} />
+              <Area type="monotone" dataKey="Income" stroke="#f0a83a" fill="url(#incomeGrad)" strokeWidth={2} />
+              <Area type="monotone" dataKey="Expenses" stroke="#d07e6a" fill="url(#expenseGrad)" strokeWidth={2} />
             </AreaChart>
           </ResponsiveContainer>
         </div>

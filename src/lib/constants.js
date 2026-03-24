@@ -1,25 +1,25 @@
 export const ACCOUNTS = [
-  { id: 'nobu', name: 'Nobu', type: 'Salary', color: '#4a7c4a' },
-  { id: 'bca', name: 'BCA', type: 'Spending', color: '#a87058' },
-  { id: 'jenius', name: 'Jenius', type: 'Savings', color: '#3a6e7d' },
-  { id: 'mandiri', name: 'Mandiri', type: 'Insurance & E-Money', color: '#6e8740' },
-  { id: 'bibit', name: 'Bibit', type: 'Investment', color: '#b5a078' },
+  { id: 'nobu', name: 'Nobu', type: 'Salary', color: '#f0a83a' },
+  { id: 'bca', name: 'BCA', type: 'Spending', color: '#d07e6a' },
+  { id: 'jenius', name: 'Jenius', type: 'Savings', color: '#538ba0' },
+  { id: 'mandiri', name: 'Mandiri', type: 'Insurance & E-Money', color: '#e8932a' },
+  { id: 'bibit', name: 'Bibit', type: 'Investment', color: '#7ea8b8' },
 ];
 
 export const CATEGORIES = {
   income: {
     label: 'Income',
-    color: '#6b9e6b',
+    color: '#f0a83a',
     subcategories: ['Freelance - Yesplis', 'Paycheck - Siloam'],
   },
   bills: {
     label: 'Bills',
-    color: '#c08a73',
+    color: '#d07e6a',
     subcategories: ['Kos', 'Insurance', 'Subscriptions', 'Phones & Internet'],
   },
   expenses: {
     label: 'Expenses',
-    color: '#a87058',
+    color: '#b86450',
     subcategories: [
       'Groceries',
       'Transportation',
@@ -32,12 +32,12 @@ export const CATEGORIES = {
   },
   savings: {
     label: 'Savings',
-    color: '#3a6e7d',
+    color: '#538ba0',
     subcategories: ['Emergency Fund', 'Goal Savings', 'General Savings'],
   },
   investments: {
     label: 'Investments',
-    color: '#8da65a',
+    color: '#7ea8b8',
     subcategories: ['Reksa Dana'],
   },
 };

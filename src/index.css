@@ -1,60 +1,60 @@
 @import "tailwindcss";
 
 @theme {
-  --color-forest-50: #f0f5f0;
-  --color-forest-100: #dce8dc;
-  --color-forest-200: #b8d1b8;
-  --color-forest-300: #8fb98f;
-  --color-forest-400: #6b9e6b;
-  --color-forest-500: #4a7c4a;
-  --color-forest-600: #3b633b;
-  --color-forest-700: #2d4a2d;
-  --color-forest-800: #1e321e;
-  --color-forest-900: #0f190f;
+  --color-forest-50: #f0f1f4;
+  --color-forest-100: #d8dbe3;
+  --color-forest-200: #b3b8c7;
+  --color-forest-300: #8e95aa;
+  --color-forest-400: #6b738d;
+  --color-forest-500: #535a72;
+  --color-forest-600: #424859;
+  --color-forest-700: #323744;
+  --color-forest-800: #22262f;
+  --color-forest-900: #13151b;
 
-  --color-moss-50: #f4f6ef;
-  --color-moss-100: #e5ebd8;
-  --color-moss-200: #ccd7b2;
-  --color-moss-300: #adbf86;
-  --color-moss-400: #8da65a;
-  --color-moss-500: #6e8740;
-  --color-moss-600: #586c33;
-  --color-moss-700: #425126;
-  --color-moss-800: #2c3619;
-  --color-moss-900: #161b0c;
+  --color-moss-50: #fef8ee;
+  --color-moss-100: #fcedcf;
+  --color-moss-200: #f8d89e;
+  --color-moss-300: #f4c06c;
+  --color-moss-400: #f0a83a;
+  --color-moss-500: #e8932a;
+  --color-moss-600: #cc761e;
+  --color-moss-700: #a95b1b;
+  --color-moss-800: #874518;
+  --color-moss-900: #6b3415;
 
   --color-sand-50: #faf8f5;
-  --color-sand-100: #f5f0e8;
-  --color-sand-200: #ebe1d1;
-  --color-sand-300: #ddd0b6;
-  --color-sand-400: #c9b896;
-  --color-sand-500: #b5a078;
-  --color-sand-600: #9a8560;
-  --color-sand-700: #7a694c;
-  --color-sand-800: #5a4e38;
-  --color-sand-900: #3b3324;
+  --color-sand-100: #f0ece4;
+  --color-sand-200: #e0d8ca;
+  --color-sand-300: #cdc1ad;
+  --color-sand-400: #b5a68e;
+  --color-sand-500: #9a8b72;
+  --color-sand-600: #7d705b;
+  --color-sand-700: #625847;
+  --color-sand-800: #484035;
+  --color-sand-900: #302b23;
 
-  --color-rosy-50: #faf5f3;
-  --color-rosy-100: #f2e5df;
-  --color-rosy-200: #e5cbbf;
-  --color-rosy-300: #d4ab99;
-  --color-rosy-400: #c08a73;
-  --color-rosy-500: #a87058;
-  --color-rosy-600: #8b5a46;
-  --color-rosy-700: #6b4535;
-  --color-rosy-800: #4b3025;
-  --color-rosy-900: #2b1b15;
+  --color-rosy-50: #fdf4f3;
+  --color-rosy-100: #f5e0dd;
+  --color-rosy-200: #ebc4bc;
+  --color-rosy-300: #dea192;
+  --color-rosy-400: #d07e6a;
+  --color-rosy-500: #b86450;
+  --color-rosy-600: #974f3e;
+  --color-rosy-700: #733c30;
+  --color-rosy-800: #502a22;
+  --color-rosy-900: #2e1814;
 
-  --color-midnight-50: #eef3f4;
-  --color-midnight-100: #d4e2e5;
-  --color-midnight-200: #a9c5cb;
-  --color-midnight-300: #7ea8b1;
-  --color-midnight-400: #538b97;
-  --color-midnight-500: #3a6e7d;
-  --color-midnight-600: #2e5864;
-  --color-midnight-700: #23424b;
-  --color-midnight-800: #172c32;
-  --color-midnight-900: #0c1619;
+  --color-midnight-50: #eef3f5;
+  --color-midnight-100: #d4e3e8;
+  --color-midnight-200: #a9c5d0;
+  --color-midnight-300: #7ea8b8;
+  --color-midnight-400: #538ba0;
+  --color-midnight-500: #3a6e84;
+  --color-midnight-600: #2e586a;
+  --color-midnight-700: #234250;
+  --color-midnight-800: #172c36;
+  --color-midnight-900: #0c161c;
 
   --font-sans: 'Inter', 'SF Pro Display', system-ui, -apple-system, sans-serif;
 }
@@ -79,5 +79,58 @@
 
   ::-webkit-scrollbar-thumb {
     @apply bg-forest-600 rounded-full;
+  }
+
+  /* Custom date input styling */
+  input[type="date"] {
+    position: relative;
+    color-scheme: dark;
+  }
+
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    opacity: 0.6;
+    filter: invert(0.8);
+    transition: opacity 0.2s;
+  }
+
+  input[type="date"]::-webkit-calendar-picker-indicator:hover {
+    opacity: 1;
+  }
+
+  input[type="date"]::-webkit-datetime-edit-fields-wrapper {
+    padding: 0;
+  }
+
+  input[type="date"]::-webkit-datetime-edit-text {
+    color: #9a8b72;
+    padding: 0 2px;
+  }
+
+  input[type="date"]::-webkit-datetime-edit-month-field,
+  input[type="date"]::-webkit-datetime-edit-day-field,
+  input[type="date"]::-webkit-datetime-edit-year-field {
+    color: #f0ece4;
+    padding: 2px 4px;
+    border-radius: 4px;
+  }
+
+  input[type="date"]::-webkit-datetime-edit-month-field:focus,
+  input[type="date"]::-webkit-datetime-edit-day-field:focus,
+  input[type="date"]::-webkit-datetime-edit-year-field:focus {
+    background: #424859;
+    color: #f0a83a;
+    outline: none;
+  }
+
+  /* Firefox date input */
+  input[type="date"]::-moz-focus-inner {
+    border: 0;
+  }
+
+  /* Select dropdown styling */
+  select option {
+    background: #22262f;
+    color: #f0ece4;
   }
 }

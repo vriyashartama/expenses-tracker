@@ -82,16 +82,16 @@ export function MonthlyBarChart({ data, title }) {
       <div className="h-64">
         <ResponsiveContainer>
           <BarChart data={data} barGap={4}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#2d4a2d" />
-            <XAxis dataKey="month" tick={{ fill: '#b5a078', fontSize: 12 }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fill: '#b5a078', fontSize: 12 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${(v / 1000000).toFixed(1)}M`} />
+            <CartesianGrid strokeDasharray="3 3" stroke="#323744" />
+            <XAxis dataKey="month" tick={{ fill: '#9a8b72', fontSize: 12 }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fill: '#9a8b72', fontSize: 12 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${(v / 1000000).toFixed(1)}M`} />
             <Tooltip content={<CustomTooltip />} />
             <Legend
-              wrapperStyle={{ fontSize: 12, color: '#ddd0b6' }}
+              wrapperStyle={{ fontSize: 12, color: '#cdc1ad' }}
             />
-            <Bar dataKey="income" name="Income" fill="#6b9e6b" radius={[4, 4, 0, 0]} />
-            <Bar dataKey="expenses" name="Expenses" fill="#c08a73" radius={[4, 4, 0, 0]} />
-            <Bar dataKey="savings" name="Savings" fill="#3a6e7d" radius={[4, 4, 0, 0]} />
+            <Bar dataKey="income" name="Income" fill="#f0a83a" radius={[4, 4, 0, 0]} />
+            <Bar dataKey="expenses" name="Expenses" fill="#d07e6a" radius={[4, 4, 0, 0]} />
+            <Bar dataKey="savings" name="Savings" fill="#538ba0" radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </div>
@@ -108,21 +108,21 @@ export function TrendAreaChart({ data, title }) {
           <AreaChart data={data}>
             <defs>
               <linearGradient id="incomeGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#6b9e6b" stopOpacity={0.3} />
-                <stop offset="95%" stopColor="#6b9e6b" stopOpacity={0} />
+                <stop offset="5%" stopColor="#f0a83a" stopOpacity={0.3} />
+                <stop offset="95%" stopColor="#f0a83a" stopOpacity={0} />
               </linearGradient>
               <linearGradient id="expenseGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#c08a73" stopOpacity={0.3} />
-                <stop offset="95%" stopColor="#c08a73" stopOpacity={0} />
+                <stop offset="5%" stopColor="#d07e6a" stopOpacity={0.3} />
+                <stop offset="95%" stopColor="#d07e6a" stopOpacity={0} />
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="#2d4a2d" />
-            <XAxis dataKey="month" tick={{ fill: '#b5a078', fontSize: 12 }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fill: '#b5a078', fontSize: 12 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${(v / 1000000).toFixed(1)}M`} />
+            <CartesianGrid strokeDasharray="3 3" stroke="#323744" />
+            <XAxis dataKey="month" tick={{ fill: '#9a8b72', fontSize: 12 }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fill: '#9a8b72', fontSize: 12 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${(v / 1000000).toFixed(1)}M`} />
             <Tooltip content={<CustomTooltip />} />
-            <Legend wrapperStyle={{ fontSize: 12, color: '#ddd0b6' }} />
-            <Area type="monotone" dataKey="income" name="Income" stroke="#6b9e6b" fill="url(#incomeGrad)" strokeWidth={2} />
-            <Area type="monotone" dataKey="expenses" name="Expenses" stroke="#c08a73" fill="url(#expenseGrad)" strokeWidth={2} />
+            <Legend wrapperStyle={{ fontSize: 12, color: '#cdc1ad' }} />
+            <Area type="monotone" dataKey="income" name="Income" stroke="#f0a83a" fill="url(#incomeGrad)" strokeWidth={2} />
+            <Area type="monotone" dataKey="expenses" name="Expenses" stroke="#d07e6a" fill="url(#expenseGrad)" strokeWidth={2} />
           </AreaChart>
         </ResponsiveContainer>
       </div>
@@ -130,7 +130,7 @@ export function TrendAreaChart({ data, title }) {
   );
 }
 
-export function SubcategoryBarChart({ data, title, color = '#6b9e6b' }) {
+export function SubcategoryBarChart({ data, title, color = '#f0a83a' }) {
   const chartData = Object.entries(data)
     .map(([name, { total }]) => ({ name, total }))
     .sort((a, b) => b.total - a.total);
@@ -141,9 +141,9 @@ export function SubcategoryBarChart({ data, title, color = '#6b9e6b' }) {
       <div className="h-64">
         <ResponsiveContainer>
           <BarChart data={chartData} layout="vertical" margin={{ left: 20 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#2d4a2d" horizontal={false} />
-            <XAxis type="number" tick={{ fill: '#b5a078', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${(v / 1000).toFixed(0)}K`} />
-            <YAxis type="category" dataKey="name" tick={{ fill: '#ddd0b6', fontSize: 11 }} axisLine={false} tickLine={false} width={110} />
+            <CartesianGrid strokeDasharray="3 3" stroke="#323744" horizontal={false} />
+            <XAxis type="number" tick={{ fill: '#9a8b72', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${(v / 1000).toFixed(0)}K`} />
+            <YAxis type="category" dataKey="name" tick={{ fill: '#cdc1ad', fontSize: 11 }} axisLine={false} tickLine={false} width={110} />
             <Tooltip content={<CustomTooltip />} />
             <Bar dataKey="total" fill={color} radius={[0, 4, 4, 0]} />
           </BarChart>

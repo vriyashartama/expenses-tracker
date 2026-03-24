@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { format } from 'date-fns';
 import { ACCOUNTS, CATEGORIES } from '../../lib/constants';
 import Input from '../atoms/Input';
+import CurrencyInput from '../atoms/CurrencyInput';
 import Select from '../atoms/Select';
 import Button from '../atoms/Button';
 import { Plus } from 'lucide-react';
@@ -64,14 +65,11 @@ export default function TransactionForm({ onSubmit, initialData, onCancel }) {
           value={form.date}
           onChange={handleChange}
         />
-        <Input
+        <CurrencyInput
           label="Amount (IDR)"
-          type="number"
           name="amount"
           value={form.amount}
           onChange={handleChange}
-          placeholder="0"
-          min="0"
         />
       </div>
 

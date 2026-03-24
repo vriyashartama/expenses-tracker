@@ -19,7 +19,7 @@ import {
 import Card from '../components/atoms/Card';
 import MonthPicker from '../components/molecules/MonthPicker';
 
-const CHART_COLORS = ['#6b9e6b', '#c08a73', '#a87058', '#3a6e7d', '#8da65a', '#b5a078', '#538b97'];
+const CHART_COLORS = ['#f0a83a', '#d07e6a', '#b86450', '#538ba0', '#7ea8b8', '#9a8b72', '#e8932a'];
 
 function ChartTooltip({ active, payload }) {
   if (!active || !payload?.length) return null;
@@ -181,9 +181,9 @@ export default function Analytics() {
             <div className="h-72">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={subData} layout="vertical" margin={{ left: 20 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#2d4a2d" horizontal={false} />
-                  <XAxis type="number" tick={{ fill: '#b5a078', fontSize: 11 }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
-                  <YAxis dataKey="name" type="category" tick={{ fill: '#b5a078', fontSize: 11 }} width={100} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#323744" horizontal={false} />
+                  <XAxis type="number" tick={{ fill: '#9a8b72', fontSize: 11 }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+                  <YAxis dataKey="name" type="category" tick={{ fill: '#9a8b72', fontSize: 11 }} width={100} />
                   <Tooltip content={<ChartTooltip />} />
                   <Bar dataKey="value" radius={[0, 4, 4, 0]}>
                     {subData.map((entry, i) => (
@@ -204,16 +204,16 @@ export default function Analytics() {
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={monthlyComparison}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#2d4a2d" />
-                <XAxis dataKey="month" tick={{ fill: '#b5a078', fontSize: 12 }} />
-                <YAxis tick={{ fill: '#b5a078', fontSize: 11 }} tickFormatter={(v) => `${(v / 1000000).toFixed(0)}M`} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#323744" />
+                <XAxis dataKey="month" tick={{ fill: '#9a8b72', fontSize: 12 }} />
+                <YAxis tick={{ fill: '#9a8b72', fontSize: 11 }} tickFormatter={(v) => `${(v / 1000000).toFixed(0)}M`} />
                 <Tooltip content={<ChartTooltip />} />
                 <Legend wrapperStyle={{ fontSize: '11px' }} formatter={(val) => <span className="text-sand-400">{val}</span>} />
-                <Bar dataKey="Income" fill="#6b9e6b" radius={[2, 2, 0, 0]} />
-                <Bar dataKey="Bills" fill="#c08a73" radius={[2, 2, 0, 0]} />
-                <Bar dataKey="Expenses" fill="#a87058" radius={[2, 2, 0, 0]} />
-                <Bar dataKey="Savings" fill="#3a6e7d" radius={[2, 2, 0, 0]} />
-                <Bar dataKey="Investments" fill="#8da65a" radius={[2, 2, 0, 0]} />
+                <Bar dataKey="Income" fill="#f0a83a" radius={[2, 2, 0, 0]} />
+                <Bar dataKey="Bills" fill="#d07e6a" radius={[2, 2, 0, 0]} />
+                <Bar dataKey="Expenses" fill="#b86450" radius={[2, 2, 0, 0]} />
+                <Bar dataKey="Savings" fill="#538ba0" radius={[2, 2, 0, 0]} />
+                <Bar dataKey="Investments" fill="#7ea8b8" radius={[2, 2, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -225,10 +225,10 @@ export default function Analytics() {
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <RadarChart data={radarData}>
-                <PolarGrid stroke="#2d4a2d" />
-                <PolarAngleAxis dataKey="category" tick={{ fill: '#b5a078', fontSize: 11 }} />
-                <PolarRadiusAxis tick={{ fill: '#b5a078', fontSize: 10 }} />
-                <Radar name="Amount" dataKey="amount" stroke="#8da65a" fill="#8da65a" fillOpacity={0.3} />
+                <PolarGrid stroke="#323744" />
+                <PolarAngleAxis dataKey="category" tick={{ fill: '#9a8b72', fontSize: 11 }} />
+                <PolarRadiusAxis tick={{ fill: '#9a8b72', fontSize: 10 }} />
+                <Radar name="Amount" dataKey="amount" stroke="#f0a83a" fill="#f0a83a" fillOpacity={0.3} />
                 <Tooltip content={<ChartTooltip />} />
               </RadarChart>
             </ResponsiveContainer>

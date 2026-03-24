@@ -1,4 +1,4 @@
-export default function ProgressBar({ value, max, color = '#4a7c4a', className = '' }) {
+export default function ProgressBar({ value, max, color = '#535a72', className = '' }) {
   const pct = max > 0 ? Math.min((value / max) * 100, 100) : 0;
   const isOver = value > max && max > 0;
 

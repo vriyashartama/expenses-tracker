@@ -4,7 +4,7 @@ import useStore from '../store/useStore';
 import { CATEGORIES } from '../lib/constants';
 import { filterTransactionsByMonth, formatCurrency } from '../lib/utils';
 import Card from '../components/atoms/Card';
-import Input from '../components/atoms/Input';
+import CurrencyInput from '../components/atoms/CurrencyInput';
 import Button from '../components/atoms/Button';
 import ProgressBar from '../components/atoms/ProgressBar';
 import MonthPicker from '../components/molecules/MonthPicker';
@@ -78,7 +78,7 @@ export default function Budget() {
             <p className="text-xs text-sand-500">used</p>
           </div>
         </div>
-        <ProgressBar value={totalSpent} max={totalBudget} color="#6b9e6b" />
+        <ProgressBar value={totalSpent} max={totalBudget} color="#f0a83a" />
       </Card>
 
       {/* Category Budgets */}
@@ -114,9 +114,8 @@ export default function Budget() {
               <ProgressBar value={cat.spent} max={cat.budget} color={cat.color} className="mb-3" />
 
               <div className="flex items-center gap-2">
-                <Input
-                  type="number"
-                  placeholder="Set budget..."
+                <CurrencyInput
+                  name={`budget-${cat.key}`}
                   value={isEditing ? editingBudgets[cat.key] : cat.budget || ''}
                   onChange={(e) =>
                     setEditingBudgets((prev) => ({ ...prev, [cat.key]: e.target.value }))
