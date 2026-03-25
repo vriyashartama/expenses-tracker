@@ -274,50 +274,67 @@ function TransactionItem({ transaction, onEdit, onDelete }) {
   const cat = CATEGORIES[transaction.category];
 
   return (
-    <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-secondary/30 transition-colors group">
-      <div
-        className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-        style={{ backgroundColor: `${cat?.color || '#666'}20`, color: cat?.color || '#666' }}
-      >
-        {isTransfer ? <ArrowLeftRight size={18} /> : isIncome ? <ArrowDownLeft size={18} /> : <ArrowUpRight size={18} />}
+    <div className="relative flex flex-col sm:flex-row items-start sm:items-center gap-3 p-3 rounded-lg hover:bg-secondary/30 transition-colors group">
+      <div className="flex items-center gap-3 w-full sm:w-auto">
+        <div
+          className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+          style={{ backgroundColor: `${cat?.color || '#666'}20`, color: cat?.color || '#666' }}
+        >
+          {isTransfer ? <ArrowLeftRight size={18} /> : isIncome ? <ArrowDownLeft size={18} /> : <ArrowUpRight size={18} />}
+        </div>
+
+        <div className="flex-1 min-w-0 sm:hidden">
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-sm font-medium">{transaction.subcategory}</p>
+            <Badge variant="outline" className="text-[10px] shrink-0">{cat?.label}</Badge>
+          </div>
+        </div>
+
+        <div className="sm:hidden shrink-0 ml-auto">
+          <p className={`text-sm font-bold tabular-nums ${isTransfer ? 'text-muted-foreground' : isIncome ? 'text-chart-1' : 'text-destructive'}`}>
+            {isTransfer ? '' : isIncome ? '+' : '-'}{formatCurrency(transaction.amount)}
+          </p>
+        </div>
       </div>
 
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <p className="text-sm font-medium truncate">{transaction.subcategory}</p>
+      <div className="flex-1 min-w-0 pl-13 sm:pl-0 w-full sm:w-auto mt-1 sm:mt-0">
+        <div className="hidden sm:flex items-center gap-2 mb-0.5">
+          <p className="text-sm font-medium break-words">{transaction.subcategory}</p>
           <Badge variant="outline" className="text-[10px] shrink-0">{cat?.label}</Badge>
         </div>
-        <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
-          <span>{formatDate(transaction.date)}</span>
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+          <span className="shrink-0">{formatDate(transaction.date)}</span>
           {account && (
             <>
-              <Separator orientation="vertical" className="h-3" />
-              <span style={{ color: account.color }}>{account.name}</span>
+              <span className="text-border text-[10px]">•</span>
+              <span style={{ color: account.color }} className="shrink-0">{account.name}</span>
               {isTransfer && toAccount && (
                 <>
                   <span className="text-muted-foreground">→</span>
-                  <span style={{ color: toAccount.color }}>{toAccount.name}</span>
+                  <span style={{ color: toAccount.color }} className="shrink-0">{toAccount.name}</span>
                 </>
               )}
             </>
           )}
           {transaction.note && (
             <>
-              <Separator orientation="vertical" className="h-3" />
-              <span className="truncate">{transaction.note}</span>
+              <span className="text-border text-[10px]">•</span>
+              <span className="break-words line-clamp-2 md:line-clamp-none">{transaction.note}</span>
             </>
           )}
         </div>
       </div>
 
-      <p className={`text-sm font-bold tabular-nums shrink-0 ${isTransfer ? 'text-muted-foreground' : isIncome ? 'text-chart-1' : 'text-destructive'}`}>
-        {isTransfer ? '' : isIncome ? '+' : '-'}{formatCurrency(transaction.amount)}
-      </p>
+      <div className="hidden sm:block shrink-0 ml-auto">
+        <p className={`text-sm font-bold tabular-nums ${isTransfer ? 'text-muted-foreground' : isIncome ? 'text-chart-1' : 'text-destructive'}`}>
+          {isTransfer ? '' : isIncome ? '+' : '-'}{formatCurrency(transaction.amount)}
+        </p>
+      </div>
 
-      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+      <div className="flex gap-1 sm:opacity-0 group-hover:opacity-100 transition-opacity shrink-0 absolute right-3 top-3 sm:static">
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onEdit(transaction)}>
+            <Button variant="ghost" size="icon" className="h-7 w-7 bg-background/80 backdrop-blur-sm sm:bg-transparent" onClick={() => onEdit(transaction)}>
               <Pencil size={14} />
             </Button>
           </TooltipTrigger>
@@ -325,7 +342,7 @@ function TransactionItem({ transaction, onEdit, onDelete }) {
         </Tooltip>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => onDelete(transaction.id)}>
+            <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive bg-background/80 backdrop-blur-sm sm:bg-transparent" onClick={() => onDelete(transaction.id)}>
               <Trash2 size={14} />
             </Button>
           </TooltipTrigger>
