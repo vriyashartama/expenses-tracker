@@ -10,12 +10,12 @@ export const CATEGORIES = {
   income: {
     label: 'Income',
     color: '#f0a83a',
-    subcategories: ['Freelance - Yesplis', 'Paycheck - Siloam'],
+    subcategories: ['Freelance', 'Paycheck', 'Dividends', 'Other'],
   },
   bills: {
     label: 'Bills',
     color: '#d07e6a',
-    subcategories: ['Kos', 'Insurance', 'Subscriptions', 'Phones & Internet'],
+    subcategories: ['Kos', 'Insurance', 'Subscriptions', 'Phones & Internet', 'Other'],
   },
   expenses: {
     label: 'Expenses',
@@ -28,17 +28,18 @@ export const CATEGORIES = {
       'Shopping',
       'Dating',
       'Gift',
+      'Other',
     ],
   },
   savings: {
     label: 'Savings',
     color: '#538ba0',
-    subcategories: ['Emergency Fund', 'Goal Savings', 'General Savings'],
+    subcategories: ['Emergency Fund', 'Goal Savings', 'General Savings', 'Other'],
   },
   investments: {
     label: 'Investments',
     color: '#7ea8b8',
-    subcategories: ['Reksa Dana'],
+    subcategories: ['Reksa Dana', 'Stock', 'Cryptocurrency', 'Other'],
   },
 };
 
