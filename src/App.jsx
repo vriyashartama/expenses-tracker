@@ -69,9 +69,9 @@ function DesktopSidebar() {
     <aside className="hidden lg:flex flex-col w-64 border-r border-border bg-background">
       <div className="flex items-center gap-2.5 p-5">
         <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-          <span className="text-sm font-bold text-primary-foreground">F</span>
+          <span className="text-sm font-bold text-primary-foreground">P</span>
         </div>
-        <span className="text-lg font-bold tracking-tight">FinTrack</span>
+        <span className="text-lg font-bold tracking-tight">Penny</span>
       </div>
       <Separator />
       <SidebarNav />
@@ -105,9 +105,9 @@ function MobileSidebar() {
         <SheetTitle className="sr-only">Navigation</SheetTitle>
         <div className="flex items-center gap-2.5 p-5">
           <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-            <span className="text-sm font-bold text-primary-foreground">F</span>
+            <span className="text-sm font-bold text-primary-foreground">P</span>
           </div>
-          <span className="text-lg font-bold tracking-tight">FinTrack</span>
+          <span className="text-lg font-bold tracking-tight">Penny</span>
         </div>
         <Separator />
         <SidebarNav onNavigate={() => setOpen(false)} />
@@ -119,10 +119,10 @@ function MobileSidebar() {
 function AppShell() {
   const location = useLocation();
   const { transactions, accounts, exportData, importData } = useStore();
-  const title = PAGE_TITLES[location.pathname] || 'FinTrack';
+  const title = PAGE_TITLES[location.pathname] || 'Penny';
   const fileInputRef = useRef(null);
 
-  const handleExport = () => exportToExcel(transactions, accounts, 'fintrack-all-transactions');
+  const handleExport = () => exportToExcel(transactions, accounts, 'penny-all-transactions');
 
   const handleExportData = () => {
     const data = exportData();
@@ -130,7 +130,7 @@ function AppShell() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `fintrack-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    a.download = `penny-backup-${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -151,7 +151,7 @@ function AppShell() {
           alert('Data imported successfully!');
         }
       } catch {
-        alert('Failed to read file. Make sure it is a valid FinTrack backup.');
+        alert('Failed to read file. Make sure it is a valid Penny backup.');
       }
     };
     reader.readAsText(file);

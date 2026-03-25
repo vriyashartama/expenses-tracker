@@ -1,16 +1,49 @@
-# React + Vite
+# Penny
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A personal finance tracker I built for myself to keep tabs on where my money goes each month. Handles income, expenses, savings, investments, and transfers between accounts — basically everything I need to stay on top of my finances without relying on spreadsheets.
 
-Currently, two official plugins are available:
+## What it does
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **Dashboard** — Monthly snapshot of income vs expenses, category breakdowns via pie chart, account balances, and a year-to-date trend line
+- **Transactions** — Add, edit, delete transactions with categories/subcategories, search and filter by month
+- **Transfers** — Move money between accounts (e.g. salary account → savings) without it counting as income or expense
+- **Accounts** — Manage multiple bank accounts with auto-calculated balances based on transaction history
+- **Budget** — Set spending limits per category, see how much of your income is allocated, get warnings when you overspend
+- **Analytics** — Pie charts, bar charts, radar charts — monthly or yearly view
+- **Reports** — Detailed breakdowns by category, subcategory, and account. Export to Excel
+- **Backup/Restore** — Export all your data as JSON, import it on another device
+- **PWA** — Installable on mobile, works offline
 
-## React Compiler
+## Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- React 19 + Vite 8
+- Tailwind CSS v4 + shadcn/ui
+- Zustand (state persisted to localStorage)
+- Recharts for charts
+- date-fns, xlsx
 
-## Expanding the ESLint configuration
+## Getting started
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+```bash
+# install dependencies
+npm install
+
+# run dev server
+npm run dev
+
+# build for production
+npm run build
+
+# preview production build
+npm run preview
+```
+
+The app runs on `http://localhost:5173` by default.
+
+## Deployment
+
+Deployed on Vercel. The `vercel.json` handles SPA routing so direct URL access to routes like `/transactions` works without 404s.
+
+## Data storage
+
+Everything is stored in localStorage under the key `penny-storage`. There's no backend — your data lives in your browser. Use the backup/restore feature if you want to move data between devices.

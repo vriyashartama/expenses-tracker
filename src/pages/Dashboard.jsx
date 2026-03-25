@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { format } from 'date-fns';
-import { TrendingUp, TrendingDown, PiggyBank, DollarSign } from 'lucide-react';
+import { TrendingUp, TrendingDown, PiggyBank, DollarSign, Landmark } from 'lucide-react';
 import {
   PieChart, Pie, Cell, AreaChart, Area, XAxis, YAxis, CartesianGrid,
 } from 'recharts';
@@ -12,7 +12,7 @@ import useStore from '@/store/useStore';
 import { CATEGORIES } from '@/lib/constants';
 import {
   filterTransactionsByMonth, calculateTotals, formatCurrency,
-  groupBySubcategory, calculatePercentages, getMonthsInYear, getAccountBalance,
+  groupBySubcategory, getMonthsInYear, getAccountBalance,
 } from '@/lib/utils';
 
 const CHART_COLORS = ['#d07e6a', '#b86450', '#538ba0', '#7ea8b8', '#9a8b72', '#f0a83a', '#e8932a'];
@@ -24,7 +24,6 @@ export default function Dashboard() {
 
   const monthTx = useMemo(() => filterTransactionsByMonth(transactions, currentMonth), [transactions, currentMonth]);
   const totals = useMemo(() => calculateTotals(monthTx), [monthTx]);
-  const pct = useMemo(() => calculatePercentages(totals), [totals]);
 
   const categoryData = useMemo(() =>
     Object.entries(CATEGORIES)
@@ -70,11 +69,12 @@ export default function Dashboard() {
         <MonthPicker value={currentMonth} onChange={setCurrentMonth} />
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         {[
           { label: 'Income', value: totals.income, color: 'text-chart-1', icon: TrendingUp, bg: 'bg-chart-1/15' },
           { label: 'Expenses', value: totals.expenses, color: 'text-destructive', icon: TrendingDown, bg: 'bg-destructive/15' },
           { label: 'Savings', value: totals.savings, color: 'text-chart-3', icon: PiggyBank, bg: 'bg-chart-3/15' },
+          { label: 'Investments', value: totals.investments, color: 'text-chart-4', icon: Landmark, bg: 'bg-chart-4/15' },
           { label: 'Net Balance', value: totals.net, color: totals.net >= 0 ? 'text-chart-1' : 'text-destructive', icon: DollarSign, bg: 'bg-muted' },
         ].map(({ label, value, color, icon: Icon, bg }) => (
           <Card key={label}>
@@ -95,25 +95,29 @@ export default function Dashboard() {
 
       {totals.income > 0 && (
         <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm">Budget Allocation</CardTitle></CardHeader>
+          <CardHeader className="pb-2"><CardTitle className="text-sm">Allocation of Income</CardTitle></CardHeader>
           <CardContent>
             <div className="grid grid-cols-3 gap-4">
               {[
-                { label: 'Expenses', pct: pct.expenses, color: '#d07e6a' },
-                { label: 'Savings', pct: pct.savings, color: '#538ba0' },
-                { label: 'Investments', pct: pct.investments, color: '#7ea8b8' },
-              ].map(({ label, pct: p, color }) => (
-                <div key={label} className="text-center">
-                  <div className="relative w-16 h-16 mx-auto mb-2">
-                    <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
-                      <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="var(--secondary)" strokeWidth="3" />
-                      <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke={color} strokeWidth="3" strokeDasharray={`${p}, 100`} className="transition-all duration-700 ease-out" />
-                    </svg>
-                    <span className="absolute inset-0 flex items-center justify-center text-xs font-bold">{p}%</span>
+                { label: 'Expenses', val: totals.expenses, color: '#d07e6a' },
+                { label: 'Savings', val: totals.savings, color: '#538ba0' },
+                { label: 'Investments', val: totals.investments, color: '#7ea8b8' },
+              ].map(({ label, val, color }) => {
+                const p = Math.round((val / totals.income) * 100);
+                return (
+                  <div key={label} className="text-center">
+                    <div className="relative w-16 h-16 mx-auto mb-2">
+                      <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
+                        <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="var(--secondary)" strokeWidth="3" />
+                        <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke={color} strokeWidth="3" strokeDasharray={`${p}, 100`} className="transition-all duration-700 ease-out" />
+                      </svg>
+                      <span className="absolute inset-0 flex items-center justify-center text-xs font-bold">{p}%</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">{label}</p>
+                    <p className="text-xs font-medium mt-0.5">{formatCurrency(val)}</p>
                   </div>
-                  <p className="text-xs text-muted-foreground">{label}</p>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </CardContent>
         </Card>

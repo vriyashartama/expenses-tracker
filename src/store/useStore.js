@@ -84,7 +84,7 @@ const useStore = create(
       },
     }),
     {
-      name: 'fintrack-storage',
+      name: 'penny-storage',
     }
   )
 );

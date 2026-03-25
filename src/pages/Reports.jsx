@@ -59,7 +59,7 @@ export default function Reports() {
 
   const handleExport = () => {
     const label = reportType === 'monthly' ? format(new Date(selectedMonth + '-01'), 'MMMM-yyyy') : selectedYear;
-    exportToExcel(activeTx, accounts, `fintrack-report-${label}`);
+    exportToExcel(activeTx, accounts, `penny-report-${label}`);
   };
 
   const renderCategorySection = (catKey, titleColor) => {

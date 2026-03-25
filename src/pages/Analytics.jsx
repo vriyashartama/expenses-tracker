@@ -32,6 +32,7 @@ export default function Analytics() {
 
   const pieData = useMemo(() =>
     Object.entries(CATEGORIES)
+      .filter(([key]) => key !== 'transfer')
       .map(([key, cat]) => ({
         name: cat.label,
         value: activeTx.filter((t) => t.category === key).reduce((s, t) => s + t.amount, 0),
@@ -64,7 +65,7 @@ export default function Analytics() {
 
   const radarData = useMemo(() =>
     Object.entries(CATEGORIES)
-      .filter(([key]) => key !== 'income')
+      .filter(([key]) => key !== 'income' && key !== 'transfer')
       .map(([key, cat]) => ({
         category: cat.label,
         amount: activeTx.filter((t) => t.category === key).reduce((s, t) => s + t.amount, 0),
