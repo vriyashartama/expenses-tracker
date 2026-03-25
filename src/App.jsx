@@ -82,7 +82,7 @@ function DesktopSidebar() {
             R
           </div>
           <div>
-            <p className="text-sm font-medium">Ryan</p>
+            <p className="text-sm font-medium">User</p>
             <p className="text-xs text-muted-foreground">Personal Finance</p>
           </div>
         </div>
