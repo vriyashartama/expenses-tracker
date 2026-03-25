@@ -168,7 +168,7 @@ export default function Reports() {
             {accounts.map((acc) => {
               const accTx = accGroups[acc.id] || { items: [], total: 0 };
               const accIncome = (accTx.items || []).filter((t) => t.category === 'income').reduce((s, t) => s + t.amount, 0);
-              const accExpense = (accTx.items || []).filter((t) => t.category !== 'income').reduce((s, t) => s + t.amount, 0);
+              const accExpense = (accTx.items || []).filter((t) => t.category !== 'income' && t.category !== 'transfer').reduce((s, t) => s + t.amount, 0);
               return (
                 <div key={acc.id} className="flex items-center justify-between p-3 rounded-lg bg-secondary/30">
                   <div className="flex items-center gap-3">

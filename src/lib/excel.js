@@ -58,7 +58,7 @@ export function exportToExcel(transactions, accounts, filename = 'financial-repo
 
   const income = summaryData.find((s) => s.Category === 'Income')?.Total || 0;
   const totalExpenses = summaryData
-    .filter((s) => s.Category !== 'Income')
+    .filter((s) => s.Category !== 'Income' && s.Category !== 'Transfer')
     .reduce((s, item) => s + item.Total, 0);
 
   summaryData.push(

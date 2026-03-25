@@ -372,7 +372,7 @@ export default function Transactions() {
   const openNew = () => { setEditingTx(null); setDialogOpen(true); };
 
   const income = filtered.filter((t) => t.category === 'income').reduce((s, t) => s + t.amount, 0);
-  const expense = filtered.filter((t) => t.category !== 'income').reduce((s, t) => s + t.amount, 0);
+  const expense = filtered.filter((t) => t.category !== 'income' && t.category !== 'transfer').reduce((s, t) => s + t.amount, 0);
 
   return (
     <div className="space-y-6">
