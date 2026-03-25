@@ -75,16 +75,10 @@ function DesktopSidebar() {
       </div>
       <Separator />
       <SidebarNav />
-      <Separator />
-      <div className="p-4">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-full bg-chart-3 flex items-center justify-center text-xs font-bold text-white">
-            U
-          </div>
-          <div>
-            <p className="text-sm font-medium">User</p>
-            <p className="text-xs text-muted-foreground">Personal Finance</p>
-          </div>
+      <div className="mt-auto p-4">
+        <div className="rounded-lg bg-muted/50 px-3 py-2.5 text-center">
+          <p className="text-[11px] text-muted-foreground/70">made with ☕ by</p>
+          <a href="https://github.com/ryanderon" target="_blank" rel="noopener noreferrer" className="text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors">ryanderon</a>
         </div>
       </div>
     </aside>
@@ -111,6 +105,12 @@ function MobileSidebar() {
         </div>
         <Separator />
         <SidebarNav onNavigate={() => setOpen(false)} />
+        <div className="mt-auto p-4">
+          <div className="rounded-lg bg-muted/50 px-3 py-2.5 text-center">
+            <p className="text-[11px] text-muted-foreground/70">made with ☕ by</p>
+            <a href="https://github.com/ryanderon" target="_blank" rel="noopener noreferrer" className="text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors">ryanderon</a>
+          </div>
+        </div>
       </SheetContent>
     </Sheet>
   );

@@ -40,10 +40,6 @@ npm run preview
 
 The app runs on `http://localhost:5173` by default.
 
-## Deployment
-
-Deployed on Vercel. The `vercel.json` handles SPA routing so direct URL access to routes like `/transactions` works without 404s.
-
 ## Data storage
 
 Everything is stored in localStorage under the key `penny-storage`. There's no backend — your data lives in your browser. Use the backup/restore feature if you want to move data between devices.
