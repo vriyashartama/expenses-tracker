@@ -1,11 +1,3 @@
-export const ACCOUNTS = [
-  { id: 'nobu', name: 'Nobu', type: 'Salary', color: '#f0a83a' },
-  { id: 'bca', name: 'BCA', type: 'Spending', color: '#d07e6a' },
-  { id: 'jenius', name: 'Jenius', type: 'Savings', color: '#538ba0' },
-  { id: 'mandiri', name: 'Mandiri', type: 'Insurance & E-Money', color: '#e8932a' },
-  { id: 'bibit', name: 'Bibit', type: 'Investment', color: '#7ea8b8' },
-];
-
 export const CATEGORIES = {
   income: {
     label: 'Income',
@@ -28,6 +20,7 @@ export const CATEGORIES = {
       'Shopping',
       'Dating',
       'Gift',
+      'Foods & Beverages',
       'Other',
     ],
   },
@@ -48,7 +41,7 @@ export const CATEGORY_LIST = Object.entries(CATEGORIES).map(([key, val]) => ({
   ...val,
 }));
 
-export const MONTHS = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
+export const ACCOUNT_COLORS = [
+  '#f0a83a', '#d07e6a', '#538ba0', '#7ea8b8', '#b86450',
+  '#e8932a', '#9a8b72', '#cc761e', '#3a6e84', '#974f3e',
 ];

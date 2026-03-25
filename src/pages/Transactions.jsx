@@ -1,159 +1,421 @@
-import { useState } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { format } from 'date-fns';
-import { Plus, X, Search, Filter } from 'lucide-react';
-import useStore from '../store/useStore';
-import { CATEGORIES, ACCOUNTS } from '../lib/constants';
-import { filterTransactionsByMonth } from '../lib/utils';
-import Card from '../components/atoms/Card';
-import Button from '../components/atoms/Button';
-import Input from '../components/atoms/Input';
-import Select from '../components/atoms/Select';
-import MonthPicker from '../components/molecules/MonthPicker';
-import TransactionForm from '../components/molecules/TransactionForm';
-import TransactionList from '../components/organisms/TransactionList';
-import { exportToExcel } from '../lib/excel';
+import {
+  Plus, Search, Pencil, Trash2, ArrowUpRight, ArrowDownLeft, AlertCircle,
+} from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Label } from '@/components/ui/label';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
+} from '@/components/ui/dialog';
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select';
+import {
+  Tooltip, TooltipContent, TooltipTrigger,
+} from '@/components/ui/tooltip';
+import { Separator } from '@/components/ui/separator';
+import MonthPicker from '@/components/ui/month-picker';
+import CurrencyInput from '@/components/ui/currency-input';
+import useStore from '@/store/useStore';
+import { CATEGORIES, CATEGORY_LIST } from '@/lib/constants';
+import { filterTransactionsByMonth, formatCurrency, formatDate, cn } from '@/lib/utils';
+
+const INITIAL_FORM = {
+  category: '', subcategory: '', account: '', amount: '', date: format(new Date(), 'yyyy-MM-dd'), note: '',
+};
+
+function FieldError({ message }) {
+  if (!message) return null;
+  return (
+    <p className="flex items-center gap-1 text-xs text-destructive mt-1">
+      <AlertCircle size={12} />
+      {message}
+    </p>
+  );
+}
+
+function TransactionFormDialog({ open, onOpenChange, transaction, onSubmit }) {
+  const { accounts } = useStore();
+  const isEditing = !!transaction;
+  const [form, setForm] = useState(
+    transaction
+      ? { ...transaction, amount: String(transaction.amount) }
+      : { ...INITIAL_FORM, account: accounts[0]?.id || '' }
+  );
+  const [errors, setErrors] = useState({});
+  const [touched, setTouched] = useState({});
+
+  const subcategories = form.category ? CATEGORIES[form.category]?.subcategories || [] : [];
+  const selectedCat = CATEGORIES[form.category];
+  const selectedAccount = accounts.find((a) => a.id === form.account);
+
+  const validate = useCallback((data) => {
+    const errs = {};
+    if (!data.category) errs.category = 'Please select a category';
+    if (data.category && !data.subcategory) errs.subcategory = 'Please select a subcategory';
+    if (!data.account) errs.account = 'Please select an account';
+    if (!data.amount || Number.parseFloat(data.amount) <= 0) errs.amount = 'Enter a valid amount';
+    if (!data.date) errs.date = 'Please select a date';
+    return errs;
+  }, []);
+
+  const set = (field, value) => {
+    const next = field === 'category'
+      ? { ...form, category: value, subcategory: '' }
+      : { ...form, [field]: value };
+    setForm(next);
+    setTouched((prev) => ({ ...prev, [field]: true }));
+    // Clear error for this field on change
+    if (errors[field]) {
+      const newErrs = { ...errors };
+      delete newErrs[field];
+      if (field === 'category') delete newErrs.subcategory;
+      setErrors(newErrs);
+    }
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const errs = validate(form);
+    if (Object.keys(errs).length > 0) {
+      setErrors(errs);
+      setTouched({ category: true, subcategory: true, account: true, amount: true, date: true });
+      return;
+    }
+    onSubmit({ ...form, amount: Number.parseFloat(form.amount) });
+    onOpenChange(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md p-0 gap-0 overflow-hidden">
+        <DialogHeader className="px-6 pt-6 pb-4 bg-secondary/10">
+          <DialogTitle className="text-xl">
+            {isEditing ? 'Edit Transaction' : 'New Transaction'}
+          </DialogTitle>
+          <DialogDescription>
+            {isEditing
+              ? 'Update the details of your transaction below.'
+              : 'Fill in the details to record a new transaction.'}
+          </DialogDescription>
+        </DialogHeader>
+
+        <form onSubmit={handleSubmit} className="flex flex-col">
+          <div className="px-6 py-5 space-y-6">
+            
+            {/* Amount Hero Section */}
+            <div className="space-y-2">
+              <Label className={cn("text-xs uppercase tracking-wider text-muted-foreground font-semibold", errors.amount && touched.amount && 'text-destructive')}>
+                Amount
+              </Label>
+              <div className="relative">
+                <CurrencyInput
+                  name="amount"
+                  value={form.amount}
+                  onChange={(e) => set('amount', e.target.value)}
+                  className={cn(
+                    'h-14 text-3xl font-bold bg-transparent border-0 border-b-2 border-border rounded-none px-0 pl-11 shadow-none focus-visible:ring-0 focus-visible:border-primary',
+                    errors.amount && touched.amount && 'border-destructive focus-visible:border-destructive'
+                  )}
+                  style={{ color: selectedCat?.color || 'var(--foreground)' }}
+                />
+              </div>
+              <FieldError message={touched.amount && errors.amount} />
+            </div>
+
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <Label className={errors.category && touched.category ? 'text-destructive' : ''}>
+                  Category
+                </Label>
+                <Select value={form.category} onValueChange={(v) => set('category', v)}>
+                  <SelectTrigger className={cn("h-10", errors.category && touched.category && 'border-destructive ring-destructive/20')}>
+                    <SelectValue placeholder="Select" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CATEGORY_LIST.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        <div className="flex items-center gap-2">
+                          <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: c.color }} />
+                          {c.label}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FieldError message={touched.category && errors.category} />
+              </div>
+
+              <div className="space-y-2">
+                <Label className={errors.subcategory && touched.subcategory ? 'text-destructive' : ''}>
+                  Subcategory
+                </Label>
+                <Select value={form.subcategory} onValueChange={(v) => set('subcategory', v)} disabled={!form.category}>
+                  <SelectTrigger className={cn("h-10", errors.subcategory && touched.subcategory && 'border-destructive ring-destructive/20')}>
+                    <SelectValue placeholder="Select" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {subcategories.map((s) => (
+                      <SelectItem key={s} value={s}>{s}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FieldError message={touched.subcategory && errors.subcategory} />
+              </div>
+            </div>
+
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <Label className={errors.account && touched.account ? 'text-destructive' : ''}>
+                  Account
+                </Label>
+                <Select value={form.account} onValueChange={(v) => set('account', v)}>
+                  <SelectTrigger className={cn("h-10", errors.account && touched.account && 'border-destructive ring-destructive/20')}>
+                    <SelectValue placeholder="Select" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {accounts.map((a) => (
+                      <SelectItem key={a.id} value={a.id}>
+                        <div className="flex items-center gap-2">
+                          <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: a.color }} />
+                          {a.name}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FieldError message={touched.account && errors.account} />
+              </div>
+
+              <div className="space-y-2">
+                <Label className={errors.date && touched.date ? 'text-destructive' : ''}>
+                  Date
+                </Label>
+                <Input
+                  type="date"
+                  value={form.date}
+                  onChange={(e) => set('date', e.target.value)}
+                  className={cn("h-10", errors.date && touched.date && 'border-destructive ring-destructive/20')}
+                />
+                <FieldError message={touched.date && errors.date} />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Note <span className="text-muted-foreground font-normal opacity-70">(optional)</span></Label>
+              <Input
+                value={form.note || ''}
+                onChange={(e) => set('note', e.target.value)}
+                placeholder="What was this for?"
+                className="h-10"
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-border bg-muted/20">
+            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
+            <Button type="submit" size="default" className="w-full sm:w-auto px-8">
+              {isEditing ? 'Save Changes' : 'Add Transaction'}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function TransactionItem({ transaction, onEdit, onDelete }) {
+  const { accounts } = useStore();
+  const account = accounts.find((a) => a.id === transaction.account);
+  const isIncome = transaction.category === 'income';
+  const cat = CATEGORIES[transaction.category];
+
+  return (
+    <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-secondary/30 transition-colors group">
+      <div
+        className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+        style={{ backgroundColor: `${cat?.color || '#666'}20`, color: cat?.color || '#666' }}
+      >
+        {isIncome ? <ArrowDownLeft size={18} /> : <ArrowUpRight size={18} />}
+      </div>
+
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <p className="text-sm font-medium truncate">{transaction.subcategory}</p>
+          <Badge variant="outline" className="text-[10px] shrink-0">{cat?.label}</Badge>
+        </div>
+        <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
+          <span>{formatDate(transaction.date)}</span>
+          {account && (
+            <>
+              <Separator orientation="vertical" className="h-3" />
+              <span style={{ color: account.color }}>{account.name}</span>
+            </>
+          )}
+          {transaction.note && (
+            <>
+              <Separator orientation="vertical" className="h-3" />
+              <span className="truncate">{transaction.note}</span>
+            </>
+          )}
+        </div>
+      </div>
+
+      <p className={`text-sm font-bold tabular-nums shrink-0 ${isIncome ? 'text-chart-1' : 'text-destructive'}`}>
+        {isIncome ? '+' : '-'}{formatCurrency(transaction.amount)}
+      </p>
+
+      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onEdit(transaction)}>
+              <Pencil size={14} />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Edit</TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => onDelete(transaction.id)}>
+              <Trash2 size={14} />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Delete</TooltipContent>
+        </Tooltip>
+      </div>
+    </div>
+  );
+}
 
 export default function Transactions() {
   const { transactions, addTransaction, updateTransaction, deleteTransaction } = useStore();
   const [currentMonth, setCurrentMonth] = useState(format(new Date(), 'yyyy-MM'));
-  const [showForm, setShowForm] = useState(false);
-  const [editingTx, setEditingTx] = useState(null);
   const [search, setSearch] = useState('');
   const [filterCategory, setFilterCategory] = useState('all');
-  const [filterAccount, setFilterAccount] = useState('all');
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingTx, setEditingTx] = useState(null);
 
-  let monthTx = filterTransactionsByMonth(transactions, currentMonth);
+  const monthTx = useMemo(() => filterTransactionsByMonth(transactions, currentMonth), [transactions, currentMonth]);
 
-  if (filterCategory !== 'all') {
-    monthTx = monthTx.filter((t) => t.category === filterCategory);
-  }
-  if (filterAccount !== 'all') {
-    monthTx = monthTx.filter((t) => t.account === filterAccount);
-  }
-  if (search) {
-    const q = search.toLowerCase();
-    monthTx = monthTx.filter(
-      (t) =>
-        t.description?.toLowerCase().includes(q) ||
-        t.subcategory?.toLowerCase().includes(q)
-    );
-  }
+  const filtered = useMemo(() => {
+    let list = monthTx;
+    if (filterCategory !== 'all') list = list.filter((t) => t.category === filterCategory);
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      list = list.filter((t) =>
+        t.subcategory?.toLowerCase().includes(q) ||
+        t.note?.toLowerCase().includes(q)
+      );
+    }
+    return list.sort((a, b) => new Date(b.date) - new Date(a.date));
+  }, [monthTx, filterCategory, search]);
 
-  const handleAdd = (data) => {
-    addTransaction(data);
-    setShowForm(false);
-  };
-
-  const handleUpdate = (data) => {
-    updateTransaction(editingTx.id, data);
+  const handleSubmit = (data) => {
+    if (editingTx) {
+      updateTransaction(editingTx.id, data);
+    } else {
+      addTransaction(data);
+    }
     setEditingTx(null);
   };
 
-  const handleEdit = (tx) => {
-    setEditingTx(tx);
-    setShowForm(true);
-  };
+  const handleEdit = (tx) => { setEditingTx(tx); setDialogOpen(true); };
+  const openNew = () => { setEditingTx(null); setDialogOpen(true); };
 
-  const handleCancel = () => {
-    setShowForm(false);
-    setEditingTx(null);
-  };
-
-  const handleExport = () => {
-    const monthlyTx = filterTransactionsByMonth(transactions, currentMonth);
-    const monthLabel = format(new Date(currentMonth + '-01'), 'MMMM-yyyy');
-    exportToExcel(monthlyTx, `fintrack-${monthLabel}`);
-  };
-
-  const categoryOpts = [
-    { value: 'all', label: 'All Categories' },
-    ...Object.entries(CATEGORIES).map(([k, v]) => ({ value: k, label: v.label })),
-  ];
-
-  const accountOpts = [
-    { value: 'all', label: 'All Accounts' },
-    ...ACCOUNTS.map((a) => ({ value: a.id, label: a.name })),
-  ];
+  const income = filtered.filter((t) => t.category === 'income').reduce((s, t) => s + t.amount, 0);
+  const expense = filtered.filter((t) => t.category !== 'income').reduce((s, t) => s + t.amount, 0);
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-sand-100">Transactions</h2>
-          <p className="text-sm text-sand-500 mt-0.5">Manage your income and expenses</p>
+          <h2 className="text-2xl font-bold">Transactions</h2>
+          <p className="text-sm text-muted-foreground mt-0.5">Manage your income and expenses</p>
         </div>
         <div className="flex items-center gap-3">
-          <MonthPicker currentMonth={currentMonth} onChange={setCurrentMonth} />
-          <Button
-            icon={showForm ? X : Plus}
-            onClick={() => {
-              if (showForm) handleCancel();
-              else setShowForm(true);
-            }}
-          >
-            <span className="hidden sm:inline">{showForm ? 'Close' : 'Add'}</span>
-          </Button>
+          <MonthPicker value={currentMonth} onChange={setCurrentMonth} />
+          <Button onClick={openNew}><Plus size={16} /> Add</Button>
         </div>
       </div>
 
-      {/* Form */}
-      {showForm && (
+      <div className="grid grid-cols-2 gap-3">
         <Card>
-          <h3 className="text-sm font-semibold text-sand-300 mb-4">
-            {editingTx ? 'Edit Transaction' : 'New Transaction'}
-          </h3>
-          <TransactionForm
-            onSubmit={editingTx ? handleUpdate : handleAdd}
-            initialData={editingTx}
-            onCancel={handleCancel}
-          />
+          <CardContent className="pt-5">
+            <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Income</p>
+            <p className="text-xl font-bold text-chart-1">{formatCurrency(income)}</p>
+          </CardContent>
         </Card>
-      )}
+        <Card>
+          <CardContent className="pt-5">
+            <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Expenses</p>
+            <p className="text-xl font-bold text-destructive">{formatCurrency(expense)}</p>
+          </CardContent>
+        </Card>
+      </div>
 
-      {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-sand-500" />
-          <input
-            type="text"
-            placeholder="Search transactions..."
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-forest-800/60 border border-forest-700/50 rounded-lg pl-9 pr-3 py-2.5 text-sm text-sand-100 placeholder-sand-600 focus:outline-none focus:ring-2 focus:ring-moss-500/50"
+            placeholder="Search transactions..."
+            className="pl-9"
           />
         </div>
-        <Select
-          options={categoryOpts}
-          value={filterCategory}
-          onChange={(e) => setFilterCategory(e.target.value)}
-          className="sm:w-44"
-        />
-        <Select
-          options={accountOpts}
-          value={filterAccount}
-          onChange={(e) => setFilterAccount(e.target.value)}
-          className="sm:w-36"
-        />
+        <Select value={filterCategory} onValueChange={setFilterCategory}>
+          <SelectTrigger className="w-full sm:w-[160px]"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Categories</SelectItem>
+            {CATEGORY_LIST.map((c) => (
+              <SelectItem key={c.id} value={c.id}>{c.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
-      {/* Export */}
-      <div className="flex justify-end">
-        <Button variant="secondary" size="sm" onClick={handleExport}>
-          Export this month to Excel
-        </Button>
-      </div>
-
-      {/* List */}
-      <Card padding={false}>
-        <div className="p-2">
-          <TransactionList
-            transactions={monthTx}
-            onEdit={handleEdit}
-            onDelete={deleteTransaction}
-          />
-        </div>
+      <Card>
+        <CardContent className="p-2">
+          {filtered.length > 0 ? (
+            <div className="divide-y divide-border/50">
+              {filtered.map((tx) => (
+                <TransactionItem
+                  key={tx.id}
+                  transaction={tx}
+                  onEdit={handleEdit}
+                  onDelete={deleteTransaction}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <div className="w-16 h-16 rounded-2xl bg-secondary flex items-center justify-center mb-4">
+                <ArrowUpRight size={28} className="text-muted-foreground" />
+              </div>
+              <h3 className="text-lg font-semibold mb-1">No transactions</h3>
+              <p className="text-sm text-muted-foreground max-w-sm mb-4">
+                {search || filterCategory !== 'all' ? 'Try adjusting your filters' : 'Add your first transaction to get started'}
+              </p>
+              {!search && filterCategory === 'all' && (
+                <Button onClick={openNew}><Plus size={16} /> Add Transaction</Button>
+              )}
+            </div>
+          )}
+        </CardContent>
       </Card>
+
+      {dialogOpen && (
+        <TransactionFormDialog
+          open={dialogOpen}
+          onOpenChange={(v) => { setDialogOpen(v); if (!v) setEditingTx(null); }}
+          transaction={editingTx}
+          onSubmit={handleSubmit}
+        />
+      )}
     </div>
   );
 }

@@ -1,15 +1,15 @@
 import * as XLSX from 'xlsx';
-import { ACCOUNTS, CATEGORIES } from './constants';
+import { CATEGORIES } from './constants';
 import { formatCurrency, formatDate } from './utils';
 
-export function exportToExcel(transactions, filename = 'financial-report') {
+export function exportToExcel(transactions, accounts, filename = 'financial-report') {
   const wb = XLSX.utils.book_new();
 
   const allData = transactions.map((t) => ({
     Date: formatDate(t.date),
     Category: CATEGORIES[t.category]?.label || t.category,
     Subcategory: t.subcategory,
-    Account: ACCOUNTS.find((a) => a.id === t.account)?.name || t.account,
+    Account: accounts.find((a) => a.id === t.account)?.name || t.account,
     Description: t.description,
     Amount: t.amount,
     Type: t.category === 'income' ? 'Income' : 'Expense',
@@ -30,7 +30,7 @@ export function exportToExcel(transactions, filename = 'financial-report') {
     const catData = catTx.map((t) => ({
       Date: formatDate(t.date),
       Subcategory: t.subcategory,
-      Account: ACCOUNTS.find((a) => a.id === t.account)?.name || t.account,
+      Account: accounts.find((a) => a.id === t.account)?.name || t.account,
       Description: t.description,
       Amount: t.amount,
     }));
@@ -47,7 +47,7 @@ export function exportToExcel(transactions, filename = 'financial-report') {
     const total = transactions
       .filter((t) => t.category === cat)
       .reduce((s, t) => s + t.amount, 0);
-    return { Category: CATEGORIES[cat].label, Total: total, 'Formatted': formatCurrency(total) };
+    return { Category: CATEGORIES[cat].label, Total: total, Formatted: formatCurrency(total) };
   });
 
   const income = summaryData.find((s) => s.Category === 'Income')?.Total || 0;

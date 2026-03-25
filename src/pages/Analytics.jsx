@@ -1,35 +1,22 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { format } from 'date-fns';
 import {
-  PieChart, Pie, Cell, ResponsiveContainer, Tooltip,
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend,
+  PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid,
   RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar,
 } from 'recharts';
-import useStore from '../store/useStore';
-import { CATEGORIES, MONTHS } from '../lib/constants';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import MonthPicker from '@/components/ui/month-picker';
+import useStore from '@/store/useStore';
+import { CATEGORIES } from '@/lib/constants';
 import {
-  filterTransactionsByMonth,
-  filterTransactionsByYear,
-  calculateTotals,
-  formatCurrency,
-  groupBySubcategory,
-  groupByAccount,
-  getMonthsInYear,
-} from '../lib/utils';
-import Card from '../components/atoms/Card';
-import MonthPicker from '../components/molecules/MonthPicker';
+  filterTransactionsByMonth, filterTransactionsByYear, calculateTotals,
+  formatCurrency, groupBySubcategory, getMonthsInYear,
+} from '@/lib/utils';
 
 const CHART_COLORS = ['#f0a83a', '#d07e6a', '#b86450', '#538ba0', '#7ea8b8', '#9a8b72', '#e8932a'];
-
-function ChartTooltip({ active, payload }) {
-  if (!active || !payload?.length) return null;
-  return (
-    <div className="bg-forest-800 border border-forest-700/50 rounded-lg px-3 py-2 shadow-xl">
-      <p className="text-xs text-sand-400">{payload[0]?.name || payload[0]?.payload?.name}</p>
-      <p className="text-sm font-semibold text-sand-100">{formatCurrency(payload[0].value)}</p>
-    </div>
-  );
-}
+const MONTHS_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 export default function Analytics() {
   const { transactions } = useStore();
@@ -37,241 +24,196 @@ export default function Analytics() {
   const [view, setView] = useState('monthly');
 
   const year = parseInt(currentMonth.split('-')[0]);
-  const monthTx = filterTransactionsByMonth(transactions, currentMonth);
-  const yearTx = filterTransactionsByYear(transactions, year);
-  const activeTx = view === 'monthly' ? monthTx : yearTx;
+  const activeTx = useMemo(
+    () => view === 'monthly' ? filterTransactionsByMonth(transactions, currentMonth) : filterTransactionsByYear(transactions, year),
+    [transactions, currentMonth, year, view]
+  );
+  const totals = useMemo(() => calculateTotals(activeTx), [activeTx]);
 
-  const totals = calculateTotals(activeTx);
+  const pieData = useMemo(() =>
+    Object.entries(CATEGORIES)
+      .map(([key, cat]) => ({
+        name: cat.label,
+        value: activeTx.filter((t) => t.category === key).reduce((s, t) => s + t.amount, 0),
+        fill: cat.color,
+      }))
+      .filter((d) => d.value > 0),
+  [activeTx]);
 
-  // Category pie data
-  const pieData = Object.entries(CATEGORIES)
-    .map(([key, cat]) => ({
-      name: cat.label,
-      value: activeTx.filter((t) => t.category === key).reduce((s, t) => s + t.amount, 0),
-      color: cat.color,
-    }))
-    .filter((d) => d.value > 0);
+  const subData = useMemo(() => {
+    const expTx = activeTx.filter((t) => ['bills', 'expenses'].includes(t.category));
+    return Object.entries(groupBySubcategory(expTx))
+      .sort((a, b) => b[1].total - a[1].total)
+      .map(([name, data], i) => ({ name, value: data.total, fill: CHART_COLORS[i % CHART_COLORS.length] }));
+  }, [activeTx]);
 
-  // Subcategory breakdown for expenses
-  const expenseTx = activeTx.filter((t) => ['bills', 'expenses'].includes(t.category));
-  const subGroups = groupBySubcategory(expenseTx);
-  const subData = Object.entries(subGroups)
-    .sort((a, b) => b[1].total - a[1].total)
-    .map(([name, data], i) => ({
-      name,
-      value: data.total,
-      fill: CHART_COLORS[i % CHART_COLORS.length],
-    }));
+  const monthlyComparison = useMemo(() =>
+    getMonthsInYear(year).map((mk) => {
+      const mTx = filterTransactionsByMonth(transactions, mk);
+      const mt = calculateTotals(mTx);
+      return {
+        month: MONTHS_SHORT[parseInt(mk.split('-')[1]) - 1],
+        Income: mt.income,
+        Bills: mTx.filter((t) => t.category === 'bills').reduce((s, t) => s + t.amount, 0),
+        Expenses: mTx.filter((t) => t.category === 'expenses').reduce((s, t) => s + t.amount, 0),
+        Savings: mt.savings,
+        Investments: mt.investments,
+      };
+    }),
+  [transactions, year]);
 
-  // Monthly comparison bar chart
-  const monthKeys = getMonthsInYear(year);
-  const monthlyComparison = monthKeys.map((mk) => {
-    const mTx = filterTransactionsByMonth(transactions, mk);
-    const mTotals = calculateTotals(mTx);
-    const monthIdx = parseInt(mk.split('-')[1]) - 1;
-    return {
-      month: MONTHS[monthIdx].slice(0, 3),
-      Income: mTotals.income,
-      Bills: mTx.filter((t) => t.category === 'bills').reduce((s, t) => s + t.amount, 0),
-      Expenses: mTx.filter((t) => t.category === 'expenses').reduce((s, t) => s + t.amount, 0),
-      Savings: mTotals.savings,
-      Investments: mTotals.investments,
-    };
-  });
+  const radarData = useMemo(() =>
+    Object.entries(CATEGORIES)
+      .filter(([key]) => key !== 'income')
+      .map(([key, cat]) => ({
+        category: cat.label,
+        amount: activeTx.filter((t) => t.category === key).reduce((s, t) => s + t.amount, 0),
+      })),
+  [activeTx]);
 
-  // Radar chart - spending categories
-  const radarData = Object.entries(CATEGORIES)
-    .filter(([key]) => key !== 'income')
-    .map(([key, cat]) => ({
-      category: cat.label,
-      amount: activeTx.filter((t) => t.category === key).reduce((s, t) => s + t.amount, 0),
-    }));
+  const expenseTx = useMemo(() => activeTx.filter((t) => ['bills', 'expenses'].includes(t.category)), [activeTx]);
 
-  // Account usage bar chart
-  const accGroups = groupByAccount(activeTx);
+  const pieConfig = useMemo(() => Object.fromEntries(pieData.map((d) => [d.name, { label: d.name, color: d.fill }])), [pieData]);
+  const barConfig = { Income: { color: '#f0a83a' }, Bills: { color: '#d07e6a' }, Expenses: { color: '#b86450' }, Savings: { color: '#538ba0' }, Investments: { color: '#7ea8b8' } };
+  const subBarConfig = useMemo(() => Object.fromEntries(subData.map((d) => [d.name, { label: d.name, color: d.fill }])), [subData]);
+  const radarConfig = { amount: { label: 'Amount', color: '#f0a83a' } };
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-sand-100">Analytics</h2>
-          <p className="text-sm text-sand-500 mt-0.5">Deep dive into your spending patterns</p>
+          <h2 className="text-2xl font-bold">Analytics</h2>
+          <p className="text-sm text-muted-foreground mt-0.5">Deep dive into your spending patterns</p>
         </div>
         <div className="flex items-center gap-3">
-          <div className="flex bg-forest-800/60 rounded-lg p-1">
-            {['monthly', 'yearly'].map((v) => (
-              <button
-                key={v}
-                onClick={() => setView(v)}
-                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all cursor-pointer ${
-                  view === v ? 'bg-forest-600 text-sand-100' : 'text-sand-400 hover:text-sand-200'
-                }`}
-              >
-                {v.charAt(0).toUpperCase() + v.slice(1)}
-              </button>
-            ))}
-          </div>
-          <MonthPicker currentMonth={currentMonth} onChange={setCurrentMonth} />
+          <Tabs value={view} onValueChange={setView}>
+            <TabsList>
+              <TabsTrigger value="monthly">Monthly</TabsTrigger>
+              <TabsTrigger value="yearly">Yearly</TabsTrigger>
+            </TabsList>
+          </Tabs>
+          <MonthPicker value={currentMonth} onChange={setCurrentMonth} />
         </div>
       </div>
 
-      {/* Summary Row */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
-          { label: 'Income', val: totals.income, color: 'text-moss-400' },
-          { label: 'Outflow', val: totals.expenses + totals.savings + totals.investments, color: 'text-rosy-400' },
-          { label: 'Savings Rate', val: totals.income > 0 ? Math.round((totals.savings / totals.income) * 100) : 0, isPct: true, color: 'text-midnight-300' },
-          { label: 'Net', val: totals.net, color: totals.net >= 0 ? 'text-moss-400' : 'text-rosy-400' },
+          { label: 'Income', val: totals.income, color: 'text-chart-1' },
+          { label: 'Outflow', val: totals.expenses + totals.savings + totals.investments, color: 'text-destructive' },
+          { label: 'Savings Rate', val: totals.income > 0 ? Math.round((totals.savings / totals.income) * 100) : 0, isPct: true, color: 'text-chart-3' },
+          { label: 'Net', val: totals.net, color: totals.net >= 0 ? 'text-chart-1' : 'text-destructive' },
         ].map(({ label, val, color, isPct }) => (
           <Card key={label}>
-            <p className="text-xs text-sand-500 uppercase tracking-wider mb-1">{label}</p>
-            <p className={`text-xl font-bold ${color}`}>
-              {isPct ? `${val}%` : formatCurrency(val)}
-            </p>
+            <CardContent className="pt-5">
+              <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">{label}</p>
+              <p className={`text-xl font-bold ${color}`}>{isPct ? `${val}%` : formatCurrency(val)}</p>
+            </CardContent>
           </Card>
         ))}
       </div>
 
-      {/* Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* All categories pie */}
         <Card>
-          <h3 className="text-sm font-semibold text-sand-300 mb-4">Category Distribution</h3>
-          {pieData.length > 0 ? (
-            <>
-              <div className="h-64">
-                <ResponsiveContainer width="100%" height="100%">
+          <CardHeader className="pb-2"><CardTitle className="text-sm">Category Distribution</CardTitle></CardHeader>
+          <CardContent>
+            {pieData.length > 0 ? (
+              <>
+                <ChartContainer config={pieConfig} className="mx-auto aspect-square max-h-[250px]">
                   <PieChart>
-                    <Pie
-                      data={pieData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={55}
-                      outerRadius={85}
-                      paddingAngle={3}
-                      dataKey="value"
-                    >
-                      {pieData.map((entry, i) => (
-                        <Cell key={i} fill={entry.color} />
-                      ))}
+                    <ChartTooltip content={<ChartTooltipContent formatter={(value) => formatCurrency(value)} />} />
+                    <Pie data={pieData} dataKey="value" nameKey="name" innerRadius={55} outerRadius={85} paddingAngle={3}>
+                      {pieData.map((e, i) => <Cell key={i} fill={e.fill} />)}
                     </Pie>
-                    <Tooltip content={<ChartTooltip />} />
                   </PieChart>
-                </ResponsiveContainer>
-              </div>
-              <div className="flex flex-wrap gap-2 justify-center">
-                {pieData.map((d, i) => (
-                  <div key={i} className="flex items-center gap-1.5">
-                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: d.color }} />
-                    <span className="text-xs text-sand-400">{d.name}: {formatCurrency(d.value)}</span>
-                  </div>
-                ))}
-              </div>
-            </>
-          ) : (
-            <p className="text-sm text-sand-500 text-center py-16">No data available</p>
-          )}
+                </ChartContainer>
+                <div className="flex flex-wrap gap-2 justify-center">
+                  {pieData.map((d, i) => (
+                    <div key={i} className="flex items-center gap-1.5">
+                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: d.fill }} />
+                      <span className="text-xs text-muted-foreground">{d.name}: {formatCurrency(d.value)}</span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <p className="text-sm text-muted-foreground text-center py-16">No data available</p>
+            )}
+          </CardContent>
         </Card>
 
-        {/* Expense subcategory bar */}
         <Card>
-          <h3 className="text-sm font-semibold text-sand-300 mb-4">Expense Breakdown</h3>
-          {subData.length > 0 ? (
-            <div className="h-72">
-              <ResponsiveContainer width="100%" height="100%">
+          <CardHeader className="pb-2"><CardTitle className="text-sm">Expense Breakdown</CardTitle></CardHeader>
+          <CardContent>
+            {subData.length > 0 ? (
+              <ChartContainer config={subBarConfig} className="h-[280px] w-full">
                 <BarChart data={subData} layout="vertical" margin={{ left: 20 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#323744" horizontal={false} />
-                  <XAxis type="number" tick={{ fill: '#9a8b72', fontSize: 11 }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
-                  <YAxis dataKey="name" type="category" tick={{ fill: '#9a8b72', fontSize: 11 }} width={100} />
-                  <Tooltip content={<ChartTooltip />} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" horizontal={false} />
+                  <XAxis type="number" tick={{ fill: 'var(--muted-foreground)', fontSize: 11 }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+                  <YAxis dataKey="name" type="category" tick={{ fill: 'var(--muted-foreground)', fontSize: 11 }} width={100} />
+                  <ChartTooltip content={<ChartTooltipContent formatter={(value) => formatCurrency(value)} />} />
                   <Bar dataKey="value" radius={[0, 4, 4, 0]}>
-                    {subData.map((entry, i) => (
-                      <Cell key={i} fill={entry.fill} />
-                    ))}
+                    {subData.map((e, i) => <Cell key={i} fill={e.fill} />)}
                   </Bar>
                 </BarChart>
-              </ResponsiveContainer>
-            </div>
-          ) : (
-            <p className="text-sm text-sand-500 text-center py-16">No expenses recorded</p>
-          )}
+              </ChartContainer>
+            ) : (
+              <p className="text-sm text-muted-foreground text-center py-16">No expenses recorded</p>
+            )}
+          </CardContent>
         </Card>
 
-        {/* Monthly comparison */}
         <Card className="lg:col-span-2">
-          <h3 className="text-sm font-semibold text-sand-300 mb-4">Monthly Comparison ({year})</h3>
-          <div className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
+          <CardHeader className="pb-2"><CardTitle className="text-sm">Monthly Comparison ({year})</CardTitle></CardHeader>
+          <CardContent>
+            <ChartContainer config={barConfig} className="h-[280px] w-full">
               <BarChart data={monthlyComparison}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#323744" />
-                <XAxis dataKey="month" tick={{ fill: '#9a8b72', fontSize: 12 }} />
-                <YAxis tick={{ fill: '#9a8b72', fontSize: 11 }} tickFormatter={(v) => `${(v / 1000000).toFixed(0)}M`} />
-                <Tooltip content={<ChartTooltip />} />
-                <Legend wrapperStyle={{ fontSize: '11px' }} formatter={(val) => <span className="text-sand-400">{val}</span>} />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                <XAxis dataKey="month" tick={{ fill: 'var(--muted-foreground)', fontSize: 12 }} />
+                <YAxis tick={{ fill: 'var(--muted-foreground)', fontSize: 11 }} tickFormatter={(v) => `${(v / 1e6).toFixed(0)}M`} />
+                <ChartTooltip content={<ChartTooltipContent formatter={(value) => formatCurrency(value)} />} />
                 <Bar dataKey="Income" fill="#f0a83a" radius={[2, 2, 0, 0]} />
                 <Bar dataKey="Bills" fill="#d07e6a" radius={[2, 2, 0, 0]} />
                 <Bar dataKey="Expenses" fill="#b86450" radius={[2, 2, 0, 0]} />
                 <Bar dataKey="Savings" fill="#538ba0" radius={[2, 2, 0, 0]} />
                 <Bar dataKey="Investments" fill="#7ea8b8" radius={[2, 2, 0, 0]} />
               </BarChart>
-            </ResponsiveContainer>
-          </div>
+            </ChartContainer>
+          </CardContent>
         </Card>
 
-        {/* Radar */}
         <Card>
-          <h3 className="text-sm font-semibold text-sand-300 mb-4">Spending Radar</h3>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
+          <CardHeader className="pb-2"><CardTitle className="text-sm">Spending Radar</CardTitle></CardHeader>
+          <CardContent>
+            <ChartContainer config={radarConfig} className="mx-auto aspect-square max-h-[250px]">
               <RadarChart data={radarData}>
-                <PolarGrid stroke="#323744" />
-                <PolarAngleAxis dataKey="category" tick={{ fill: '#9a8b72', fontSize: 11 }} />
-                <PolarRadiusAxis tick={{ fill: '#9a8b72', fontSize: 10 }} />
+                <PolarGrid stroke="var(--border)" />
+                <PolarAngleAxis dataKey="category" tick={{ fill: 'var(--muted-foreground)', fontSize: 11 }} />
+                <PolarRadiusAxis tick={{ fill: 'var(--muted-foreground)', fontSize: 10 }} />
                 <Radar name="Amount" dataKey="amount" stroke="#f0a83a" fill="#f0a83a" fillOpacity={0.3} />
-                <Tooltip content={<ChartTooltip />} />
+                <ChartTooltip content={<ChartTooltipContent formatter={(value) => formatCurrency(value)} />} />
               </RadarChart>
-            </ResponsiveContainer>
-          </div>
+            </ChartContainer>
+          </CardContent>
         </Card>
 
-        {/* Quick Stats */}
         <Card>
-          <h3 className="text-sm font-semibold text-sand-300 mb-4">Quick Stats</h3>
-          <div className="space-y-4">
-            <div className="flex justify-between items-center pb-3 border-b border-forest-700/30">
-              <span className="text-sm text-sand-400">Total Transactions</span>
-              <span className="text-sm font-bold text-sand-200">{activeTx.length}</span>
+          <CardHeader className="pb-2"><CardTitle className="text-sm">Quick Stats</CardTitle></CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {[
+                { label: 'Total Transactions', value: String(activeTx.length) },
+                { label: 'Avg. Transaction', value: activeTx.length > 0 ? formatCurrency(activeTx.reduce((s, t) => s + t.amount, 0) / activeTx.length) : formatCurrency(0) },
+                { label: 'Largest Expense', value: expenseTx.length > 0 ? formatCurrency(Math.max(...expenseTx.map((t) => t.amount))) : formatCurrency(0), color: 'text-destructive' },
+                { label: 'Savings Rate', value: `${totals.income > 0 ? Math.round((totals.savings / totals.income) * 100) : 0}%`, color: 'text-chart-3' },
+                { label: 'Investment Rate', value: `${totals.income > 0 ? Math.round((totals.investments / totals.income) * 100) : 0}%`, color: 'text-chart-1' },
+              ].map(({ label, value, color }, i, arr) => (
+                <div key={label} className={`flex justify-between items-center ${i < arr.length - 1 ? 'pb-3 border-b border-border/50' : ''}`}>
+                  <span className="text-sm text-muted-foreground">{label}</span>
+                  <span className={`text-sm font-bold ${color || ''}`}>{value}</span>
+                </div>
+              ))}
             </div>
-            <div className="flex justify-between items-center pb-3 border-b border-forest-700/30">
-              <span className="text-sm text-sand-400">Avg. Transaction</span>
-              <span className="text-sm font-bold text-sand-200">
-                {activeTx.length > 0
-                  ? formatCurrency(activeTx.reduce((s, t) => s + t.amount, 0) / activeTx.length)
-                  : formatCurrency(0)}
-              </span>
-            </div>
-            <div className="flex justify-between items-center pb-3 border-b border-forest-700/30">
-              <span className="text-sm text-sand-400">Largest Expense</span>
-              <span className="text-sm font-bold text-rosy-400">
-                {expenseTx.length > 0
-                  ? formatCurrency(Math.max(...expenseTx.map((t) => t.amount)))
-                  : formatCurrency(0)}
-              </span>
-            </div>
-            <div className="flex justify-between items-center pb-3 border-b border-forest-700/30">
-              <span className="text-sm text-sand-400">Savings Rate</span>
-              <span className="text-sm font-bold text-midnight-300">
-                {totals.income > 0 ? Math.round((totals.savings / totals.income) * 100) : 0}%
-              </span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-sand-400">Investment Rate</span>
-              <span className="text-sm font-bold text-moss-400">
-                {totals.income > 0 ? Math.round((totals.investments / totals.income) * 100) : 0}%
-              </span>
-            </div>
-          </div>
+          </CardContent>
         </Card>
       </div>
     </div>
