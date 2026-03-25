@@ -79,7 +79,7 @@ function DesktopSidebar() {
       <div className="p-4">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-full bg-chart-3 flex items-center justify-center text-xs font-bold text-white">
-            R
+            U
           </div>
           <div>
             <p className="text-sm font-medium">User</p>
