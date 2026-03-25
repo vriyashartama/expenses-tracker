@@ -144,7 +144,6 @@ export default function Reports() {
             {renderCategorySection('expenses', 'text-destructive')}
             {renderCategorySection('savings', 'text-chart-3')}
             {renderCategorySection('investments', 'text-chart-4')}
-            {renderCategorySection('transfer', 'text-muted-foreground')}
 
             <div className="bg-secondary/40 px-4 py-4">
               <div className="flex justify-between items-center">

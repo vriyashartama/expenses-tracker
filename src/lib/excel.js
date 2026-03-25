@@ -15,7 +15,7 @@ export function exportToExcel(transactions, accounts, filename = 'financial-repo
       Amount: t.amount,
       Type: t.category === 'income' ? 'Income' : t.category === 'transfer' ? 'Transfer' : 'Expense',
     };
-    if (t.category === 'transfer') {
+    if (t.toAccount) {
       row['To Account'] = accounts.find((a) => a.id === t.toAccount)?.name || t.toAccount;
     }
     return row;

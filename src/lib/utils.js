@@ -107,6 +107,12 @@ export function getAccountBalance(transactions, accountId) {
     if (t.category === 'transfer') {
       if (t.account === accountId) balance -= t.amount;
       if (t.toAccount === accountId) balance += t.amount;
+    } else if (t.toAccount && t.account === accountId) {
+      // Investment (or any category) with toAccount: money leaves source
+      balance -= t.amount;
+    } else if (t.toAccount && t.toAccount === accountId) {
+      // Investment (or any category) with toAccount: money enters destination
+      balance += t.amount;
     } else if (t.account === accountId) {
       balance += t.category === 'income' ? t.amount : -t.amount;
     }

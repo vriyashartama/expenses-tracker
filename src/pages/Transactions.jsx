@@ -54,14 +54,16 @@ function TransactionFormDialog({ open, onOpenChange, transaction, onSubmit }) {
   const selectedAccount = accounts.find((a) => a.id === form.account);
 
   const isTransfer = form.category === 'transfer';
+  const isInvestment = form.category === 'investments';
+  const showToAccount = isTransfer || isInvestment;
 
   const validate = useCallback((data) => {
     const errs = {};
     if (!data.category) errs.category = 'Please select a category';
     if (data.category && data.category !== 'transfer' && !data.subcategory) errs.subcategory = 'Please select a subcategory';
     if (!data.account) errs.account = 'Please select an account';
-    if (data.category === 'transfer' && !data.toAccount) errs.toAccount = 'Please select destination account';
-    if (data.category === 'transfer' && data.toAccount && data.account === data.toAccount) errs.toAccount = 'Cannot transfer to the same account';
+    if ((data.category === 'transfer' || data.category === 'investments') && !data.toAccount) errs.toAccount = 'Please select destination account';
+    if ((data.category === 'transfer' || data.category === 'investments') && data.toAccount && data.account === data.toAccount) errs.toAccount = 'Cannot transfer to the same account';
     if (!data.amount || Number.parseFloat(data.amount) <= 0) errs.amount = 'Enter a valid amount';
     if (!data.date) errs.date = 'Please select a date';
     return errs;
@@ -72,7 +74,7 @@ function TransactionFormDialog({ open, onOpenChange, transaction, onSubmit }) {
     if (field === 'category') {
       next = value === 'transfer'
         ? { ...form, category: value, subcategory: 'Account Transfer', toAccount: '' }
-        : { ...form, category: value, subcategory: '', toAccount: '' };
+        : { ...form, category: value, subcategory: '', toAccount: value === 'investments' ? form.toAccount : '' };
     } else {
       next = { ...form, [field]: value };
     }
@@ -96,7 +98,7 @@ function TransactionFormDialog({ open, onOpenChange, transaction, onSubmit }) {
       return;
     }
     const payload = { ...form, amount: Number.parseFloat(form.amount) };
-    if (form.category !== 'transfer') delete payload.toAccount;
+    if (form.category !== 'transfer' && form.category !== 'investments') delete payload.toAccount;
     onSubmit(payload);
     onOpenChange(false);
   };
@@ -184,7 +186,7 @@ function TransactionFormDialog({ open, onOpenChange, transaction, onSubmit }) {
             <div className="space-y-6">
               <div className="space-y-2">
                 <Label className={errors.account && touched.account ? 'text-destructive' : ''}>
-                  {isTransfer ? 'From Account' : 'Account'}
+                  {showToAccount ? 'From Account' : 'Account'}
                 </Label>
                 <Select value={form.account} onValueChange={(v) => set('account', v)}>
                   <SelectTrigger className={cn("h-10", errors.account && touched.account && 'border-destructive ring-destructive/20')}>
@@ -204,7 +206,7 @@ function TransactionFormDialog({ open, onOpenChange, transaction, onSubmit }) {
                 <FieldError message={touched.account && errors.account} />
               </div>
 
-              {isTransfer && (
+              {showToAccount && (
                 <div className="space-y-2">
                   <Label className={errors.toAccount && touched.toAccount ? 'text-destructive' : ''}>
                     To Account
@@ -271,6 +273,7 @@ function TransactionItem({ transaction, onEdit, onDelete }) {
   const toAccount = transaction.toAccount ? accounts.find((a) => a.id === transaction.toAccount) : null;
   const isIncome = transaction.category === 'income';
   const isTransfer = transaction.category === 'transfer';
+  const hasToAccount = !!toAccount;
   const cat = CATEGORIES[transaction.category];
 
   return (
@@ -293,7 +296,7 @@ function TransactionItem({ transaction, onEdit, onDelete }) {
             <>
               <span className="text-border text-[10px]">•</span>
               <span style={{ color: account.color }} className="shrink-0">{account.name}</span>
-              {isTransfer && toAccount && (
+              {toAccount && (
                 <>
                   <span className="text-muted-foreground">→</span>
                   <span style={{ color: toAccount.color }} className="shrink-0">{toAccount.name}</span>
