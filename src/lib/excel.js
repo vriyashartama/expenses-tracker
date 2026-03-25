@@ -5,15 +5,21 @@ import { formatCurrency, formatDate } from './utils';
 export function exportToExcel(transactions, accounts, filename = 'financial-report') {
   const wb = XLSX.utils.book_new();
 
-  const allData = transactions.map((t) => ({
-    Date: formatDate(t.date),
-    Category: CATEGORIES[t.category]?.label || t.category,
-    Subcategory: t.subcategory,
-    Account: accounts.find((a) => a.id === t.account)?.name || t.account,
-    Description: t.description,
-    Amount: t.amount,
-    Type: t.category === 'income' ? 'Income' : 'Expense',
-  }));
+  const allData = transactions.map((t) => {
+    const row = {
+      Date: formatDate(t.date),
+      Category: CATEGORIES[t.category]?.label || t.category,
+      Subcategory: t.subcategory,
+      Account: accounts.find((a) => a.id === t.account)?.name || t.account,
+      Description: t.description,
+      Amount: t.amount,
+      Type: t.category === 'income' ? 'Income' : t.category === 'transfer' ? 'Transfer' : 'Expense',
+    };
+    if (t.category === 'transfer') {
+      row['To Account'] = accounts.find((a) => a.id === t.toAccount)?.name || t.toAccount;
+    }
+    return row;
+  });
 
   const wsAll = XLSX.utils.json_to_sheet(allData);
   wsAll['!cols'] = [
@@ -22,7 +28,7 @@ export function exportToExcel(transactions, accounts, filename = 'financial-repo
   ];
   XLSX.utils.book_append_sheet(wb, wsAll, 'All Transactions');
 
-  const categories = ['income', 'bills', 'expenses', 'savings', 'investments'];
+  const categories = ['income', 'bills', 'expenses', 'savings', 'investments', 'transfer'];
   for (const cat of categories) {
     const catTx = transactions.filter((t) => t.category === cat);
     if (catTx.length === 0) continue;

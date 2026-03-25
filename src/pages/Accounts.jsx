@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/tooltip';
 import useStore from '@/store/useStore';
 import { ACCOUNT_COLORS } from '@/lib/constants';
-import { formatCurrency, cn } from '@/lib/utils';
+import { formatCurrency, getAccountBalance, cn } from '@/lib/utils';
 
 const INITIAL_FORM = { name: '', type: '', color: ACCOUNT_COLORS[0] };
 
@@ -93,11 +93,7 @@ export default function Accounts() {
     deleteAccount(id);
   };
 
-  const getBalance = (accId) => {
-    const inc = transactions.filter((t) => t.account === accId && t.category === 'income').reduce((s, t) => s + t.amount, 0);
-    const out = transactions.filter((t) => t.account === accId && t.category !== 'income').reduce((s, t) => s + t.amount, 0);
-    return inc - out;
-  };
+  const getBalance = (accId) => getAccountBalance(transactions, accId);
 
   const getTxCount = (accId) => transactions.filter((t) => t.account === accId).length;
 

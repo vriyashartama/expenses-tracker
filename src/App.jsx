@@ -1,8 +1,8 @@
 import { BrowserRouter, Routes, Route, NavLink, useLocation } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import {
   LayoutDashboard, ArrowLeftRight, PieChart, Target,
-  FileText, Menu, Download, X, Wallet,
+  FileText, Menu, Download, Upload, HardDriveDownload, X, Wallet,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -118,10 +118,45 @@ function MobileSidebar() {
 
 function AppShell() {
   const location = useLocation();
-  const { transactions, accounts } = useStore();
+  const { transactions, accounts, exportData, importData } = useStore();
   const title = PAGE_TITLES[location.pathname] || 'FinTrack';
+  const fileInputRef = useRef(null);
 
   const handleExport = () => exportToExcel(transactions, accounts, 'fintrack-all-transactions');
+
+  const handleExportData = () => {
+    const data = exportData();
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `fintrack-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImportData = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        if (!Array.isArray(data.transactions) || !Array.isArray(data.accounts)) {
+          alert('Invalid backup file format.');
+          return;
+        }
+        if (window.confirm(`This will replace all your current data with the backup (${data.transactions.length} transactions, ${data.accounts.length} accounts). Continue?`)) {
+          importData(data);
+          alert('Data imported successfully!');
+        }
+      } catch {
+        alert('Failed to read file. Make sure it is a valid FinTrack backup.');
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -132,10 +167,21 @@ function AppShell() {
             <MobileSidebar />
             <h1 className="text-lg font-bold">{title}</h1>
           </div>
-          <Button variant="outline" size="sm" onClick={handleExport}>
-            <Download size={14} />
-            <span className="hidden sm:inline">Export Excel</span>
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={handleExportData}>
+              <HardDriveDownload size={14} />
+              <span className="hidden sm:inline">Backup</span>
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
+              <Upload size={14} />
+              <span className="hidden sm:inline">Restore</span>
+            </Button>
+            <input ref={fileInputRef} type="file" accept=".json" className="hidden" onChange={handleImportData} />
+            <Button variant="outline" size="sm" onClick={handleExport}>
+              <Download size={14} />
+              <span className="hidden sm:inline">Export Excel</span>
+            </Button>
+          </div>
         </header>
 
         <main className="flex-1 overflow-y-auto pb-20 lg:pb-0">

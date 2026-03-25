@@ -12,7 +12,7 @@ import useStore from '@/store/useStore';
 import { CATEGORIES } from '@/lib/constants';
 import {
   filterTransactionsByMonth, calculateTotals, formatCurrency,
-  groupBySubcategory, calculatePercentages, getMonthsInYear,
+  groupBySubcategory, calculatePercentages, getMonthsInYear, getAccountBalance,
 } from '@/lib/utils';
 
 const CHART_COLORS = ['#d07e6a', '#b86450', '#538ba0', '#7ea8b8', '#9a8b72', '#f0a83a', '#e8932a'];
@@ -28,7 +28,7 @@ export default function Dashboard() {
 
   const categoryData = useMemo(() =>
     Object.entries(CATEGORIES)
-      .filter(([key]) => key !== 'income')
+      .filter(([key]) => key !== 'income' && key !== 'transfer')
       .map(([key, cat]) => ({
         name: cat.label,
         value: monthTx.filter((t) => t.category === key).reduce((s, t) => s + t.amount, 0),
@@ -38,11 +38,7 @@ export default function Dashboard() {
   [monthTx]);
 
   const accountBalances = useMemo(() =>
-    accounts.map((acc) => {
-      const inc = transactions.filter((t) => t.account === acc.id && t.category === 'income').reduce((s, t) => s + t.amount, 0);
-      const out = transactions.filter((t) => t.account === acc.id && t.category !== 'income').reduce((s, t) => s + t.amount, 0);
-      return { ...acc, balance: inc - out };
-    }),
+    accounts.map((acc) => ({ ...acc, balance: getAccountBalance(transactions, acc.id) })),
   [transactions, accounts]);
 
   const year = currentMonth.split('-')[0];

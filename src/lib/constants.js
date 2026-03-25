@@ -34,6 +34,11 @@ export const CATEGORIES = {
     color: '#7ea8b8',
     subcategories: ['Reksa Dana', 'Stock', 'Cryptocurrency', 'Other'],
   },
+  transfer: {
+    label: 'Transfer',
+    color: '#6c7a89',
+    subcategories: ['Account Transfer'],
+  },
 };
 
 export const CATEGORY_LIST = Object.entries(CATEGORIES).map(([key, val]) => ({

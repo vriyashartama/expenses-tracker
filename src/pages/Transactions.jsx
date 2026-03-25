@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback } from 'react';
 import { format } from 'date-fns';
 import {
-  Plus, Search, Pencil, Trash2, ArrowUpRight, ArrowDownLeft, AlertCircle,
+  Plus, Search, Pencil, Trash2, ArrowUpRight, ArrowDownLeft, ArrowLeftRight, AlertCircle,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -22,10 +22,10 @@ import MonthPicker from '@/components/ui/month-picker';
 import CurrencyInput from '@/components/ui/currency-input';
 import useStore from '@/store/useStore';
 import { CATEGORIES, CATEGORY_LIST } from '@/lib/constants';
-import { filterTransactionsByMonth, formatCurrency, formatDate, cn } from '@/lib/utils';
+import { filterTransactionsByMonth, formatCurrency, formatDate, getAccountBalance, cn } from '@/lib/utils';
 
 const INITIAL_FORM = {
-  category: '', subcategory: '', account: '', amount: '', date: format(new Date(), 'yyyy-MM-dd'), note: '',
+  category: '', subcategory: '', account: '', toAccount: '', amount: '', date: format(new Date(), 'yyyy-MM-dd'), note: '',
 };
 
 function FieldError({ message }) {
@@ -53,20 +53,29 @@ function TransactionFormDialog({ open, onOpenChange, transaction, onSubmit }) {
   const selectedCat = CATEGORIES[form.category];
   const selectedAccount = accounts.find((a) => a.id === form.account);
 
+  const isTransfer = form.category === 'transfer';
+
   const validate = useCallback((data) => {
     const errs = {};
     if (!data.category) errs.category = 'Please select a category';
-    if (data.category && !data.subcategory) errs.subcategory = 'Please select a subcategory';
+    if (data.category && data.category !== 'transfer' && !data.subcategory) errs.subcategory = 'Please select a subcategory';
     if (!data.account) errs.account = 'Please select an account';
+    if (data.category === 'transfer' && !data.toAccount) errs.toAccount = 'Please select destination account';
+    if (data.category === 'transfer' && data.toAccount && data.account === data.toAccount) errs.toAccount = 'Cannot transfer to the same account';
     if (!data.amount || Number.parseFloat(data.amount) <= 0) errs.amount = 'Enter a valid amount';
     if (!data.date) errs.date = 'Please select a date';
     return errs;
   }, []);
 
   const set = (field, value) => {
-    const next = field === 'category'
-      ? { ...form, category: value, subcategory: '' }
-      : { ...form, [field]: value };
+    let next;
+    if (field === 'category') {
+      next = value === 'transfer'
+        ? { ...form, category: value, subcategory: 'Account Transfer', toAccount: '' }
+        : { ...form, category: value, subcategory: '', toAccount: '' };
+    } else {
+      next = { ...form, [field]: value };
+    }
     setForm(next);
     setTouched((prev) => ({ ...prev, [field]: true }));
     // Clear error for this field on change
@@ -83,10 +92,12 @@ function TransactionFormDialog({ open, onOpenChange, transaction, onSubmit }) {
     const errs = validate(form);
     if (Object.keys(errs).length > 0) {
       setErrors(errs);
-      setTouched({ category: true, subcategory: true, account: true, amount: true, date: true });
+      setTouched({ category: true, subcategory: true, account: true, toAccount: true, amount: true, date: true });
       return;
     }
-    onSubmit({ ...form, amount: Number.parseFloat(form.amount) });
+    const payload = { ...form, amount: Number.parseFloat(form.amount) };
+    if (form.category !== 'transfer') delete payload.toAccount;
+    onSubmit(payload);
     onOpenChange(false);
   };
 
@@ -150,28 +161,30 @@ function TransactionFormDialog({ open, onOpenChange, transaction, onSubmit }) {
                 <FieldError message={touched.category && errors.category} />
               </div>
 
-              <div className="space-y-2">
-                <Label className={errors.subcategory && touched.subcategory ? 'text-destructive' : ''}>
-                  Subcategory
-                </Label>
-                <Select value={form.subcategory} onValueChange={(v) => set('subcategory', v)} disabled={!form.category}>
-                  <SelectTrigger className={cn("h-10", errors.subcategory && touched.subcategory && 'border-destructive ring-destructive/20')}>
-                    <SelectValue placeholder="Select" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {subcategories.map((s) => (
-                      <SelectItem key={s} value={s}>{s}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FieldError message={touched.subcategory && errors.subcategory} />
-              </div>
+              {!isTransfer && (
+                <div className="space-y-2">
+                  <Label className={errors.subcategory && touched.subcategory ? 'text-destructive' : ''}>
+                    Subcategory
+                  </Label>
+                  <Select value={form.subcategory} onValueChange={(v) => set('subcategory', v)} disabled={!form.category}>
+                    <SelectTrigger className={cn("h-10", errors.subcategory && touched.subcategory && 'border-destructive ring-destructive/20')}>
+                      <SelectValue placeholder="Select" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {subcategories.map((s) => (
+                        <SelectItem key={s} value={s}>{s}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FieldError message={touched.subcategory && errors.subcategory} />
+                </div>
+              )}
             </div>
 
             <div className="space-y-6">
               <div className="space-y-2">
                 <Label className={errors.account && touched.account ? 'text-destructive' : ''}>
-                  Account
+                  {isTransfer ? 'From Account' : 'Account'}
                 </Label>
                 <Select value={form.account} onValueChange={(v) => set('account', v)}>
                   <SelectTrigger className={cn("h-10", errors.account && touched.account && 'border-destructive ring-destructive/20')}>
@@ -190,6 +203,30 @@ function TransactionFormDialog({ open, onOpenChange, transaction, onSubmit }) {
                 </Select>
                 <FieldError message={touched.account && errors.account} />
               </div>
+
+              {isTransfer && (
+                <div className="space-y-2">
+                  <Label className={errors.toAccount && touched.toAccount ? 'text-destructive' : ''}>
+                    To Account
+                  </Label>
+                  <Select value={form.toAccount || ''} onValueChange={(v) => set('toAccount', v)}>
+                    <SelectTrigger className={cn("h-10", errors.toAccount && touched.toAccount && 'border-destructive ring-destructive/20')}>
+                      <SelectValue placeholder="Select destination" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {accounts.filter((a) => a.id !== form.account).map((a) => (
+                        <SelectItem key={a.id} value={a.id}>
+                          <div className="flex items-center gap-2">
+                            <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: a.color }} />
+                            {a.name}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FieldError message={touched.toAccount && errors.toAccount} />
+                </div>
+              )}
 
               <div className="space-y-2">
                 <Label className={errors.date && touched.date ? 'text-destructive' : ''}>
@@ -231,7 +268,9 @@ function TransactionFormDialog({ open, onOpenChange, transaction, onSubmit }) {
 function TransactionItem({ transaction, onEdit, onDelete }) {
   const { accounts } = useStore();
   const account = accounts.find((a) => a.id === transaction.account);
+  const toAccount = transaction.toAccount ? accounts.find((a) => a.id === transaction.toAccount) : null;
   const isIncome = transaction.category === 'income';
+  const isTransfer = transaction.category === 'transfer';
   const cat = CATEGORIES[transaction.category];
 
   return (
@@ -240,7 +279,7 @@ function TransactionItem({ transaction, onEdit, onDelete }) {
         className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
         style={{ backgroundColor: `${cat?.color || '#666'}20`, color: cat?.color || '#666' }}
       >
-        {isIncome ? <ArrowDownLeft size={18} /> : <ArrowUpRight size={18} />}
+        {isTransfer ? <ArrowLeftRight size={18} /> : isIncome ? <ArrowDownLeft size={18} /> : <ArrowUpRight size={18} />}
       </div>
 
       <div className="flex-1 min-w-0">
@@ -254,6 +293,12 @@ function TransactionItem({ transaction, onEdit, onDelete }) {
             <>
               <Separator orientation="vertical" className="h-3" />
               <span style={{ color: account.color }}>{account.name}</span>
+              {isTransfer && toAccount && (
+                <>
+                  <span className="text-muted-foreground">→</span>
+                  <span style={{ color: toAccount.color }}>{toAccount.name}</span>
+                </>
+              )}
             </>
           )}
           {transaction.note && (
@@ -265,8 +310,8 @@ function TransactionItem({ transaction, onEdit, onDelete }) {
         </div>
       </div>
 
-      <p className={`text-sm font-bold tabular-nums shrink-0 ${isIncome ? 'text-chart-1' : 'text-destructive'}`}>
-        {isIncome ? '+' : '-'}{formatCurrency(transaction.amount)}
+      <p className={`text-sm font-bold tabular-nums shrink-0 ${isTransfer ? 'text-muted-foreground' : isIncome ? 'text-chart-1' : 'text-destructive'}`}>
+        {isTransfer ? '' : isIncome ? '+' : '-'}{formatCurrency(transaction.amount)}
       </p>
 
       <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">

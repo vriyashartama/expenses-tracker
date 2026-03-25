@@ -67,7 +67,11 @@ export function calculateTotals(transactions) {
     .filter((t) => t.category === 'investments')
     .reduce((sum, t) => sum + t.amount, 0);
 
-  return { income, expenses, savings, investments, net: income - expenses - savings - investments };
+  const transfers = transactions
+    .filter((t) => t.category === 'transfer')
+    .reduce((sum, t) => sum + t.amount, 0);
+
+  return { income, expenses, savings, investments, transfers, net: income - expenses - savings - investments };
 }
 
 export function groupByCategory(transactions) {
@@ -95,6 +99,19 @@ export function groupByAccount(transactions) {
     acc[t.account].total += t.amount;
     return acc;
   }, {});
+}
+
+export function getAccountBalance(transactions, accountId) {
+  let balance = 0;
+  for (const t of transactions) {
+    if (t.category === 'transfer') {
+      if (t.account === accountId) balance -= t.amount;
+      if (t.toAccount === accountId) balance += t.amount;
+    } else if (t.account === accountId) {
+      balance += t.category === 'income' ? t.amount : -t.amount;
+    }
+  }
+  return balance;
 }
 
 export function calculatePercentages(totals) {

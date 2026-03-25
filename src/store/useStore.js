@@ -69,6 +69,19 @@ const useStore = create(
       getBudget: (monthKey, category) => {
         return get().budgets[monthKey]?.[category] || 0;
       },
+
+      // Data export/import
+      exportData: () => {
+        const { transactions, budgets, accounts } = get();
+        return { transactions, budgets, accounts, exportedAt: new Date().toISOString(), version: 1 };
+      },
+
+      importData: (data) => {
+        if (!data || !Array.isArray(data.transactions) || !Array.isArray(data.accounts)) {
+          throw new Error('Invalid data format');
+        }
+        set({ transactions: data.transactions, accounts: data.accounts, budgets: data.budgets || {} });
+      },
     }),
     {
       name: 'fintrack-storage',
