@@ -1,17 +1,17 @@
 export const CATEGORIES = {
   income: {
     label: 'Income',
-    color: '#f0a83a',
+    color: '#6b7d4a',
     subcategories: ['Freelance', 'Paycheck', 'Dividends', 'Other'],
   },
   bills: {
     label: 'Bills',
-    color: '#d07e6a',
+    color: '#d47d52',
     subcategories: ['Kos', 'Insurance', 'Subscriptions', 'Phones & Internet', 'Other'],
   },
   expenses: {
     label: 'Expenses',
-    color: '#b86450',
+    color: '#bf6438',
     subcategories: [
       'Groceries',
       'Transportation',
@@ -26,17 +26,17 @@ export const CATEGORIES = {
   },
   savings: {
     label: 'Savings',
-    color: '#538ba0',
+    color: '#506180',
     subcategories: ['Emergency Fund', 'Goal Savings', 'General Savings', 'Other'],
   },
   investments: {
     label: 'Investments',
-    color: '#7ea8b8',
+    color: '#9070ad',
     subcategories: ['Reksa Dana', 'Stock', 'Cryptocurrency', 'Other'],
   },
   transfer: {
     label: 'Transfer',
-    color: '#6c7a89',
+    color: '#9c8c74',
     subcategories: ['Account Transfer'],
   },
 };
@@ -47,6 +47,6 @@ export const CATEGORY_LIST = Object.entries(CATEGORIES).map(([key, val]) => ({
 }));
 
 export const ACCOUNT_COLORS = [
-  '#f0a83a', '#d07e6a', '#538ba0', '#7ea8b8', '#b86450',
-  '#e8932a', '#9a8b72', '#cc761e', '#3a6e84', '#974f3e',
+  '#6b7d4a', '#d47d52', '#506180', '#9070ad', '#bf6438',
+  '#8a9f62', '#9c8c74', '#755691', '#687a9a', '#b8a992',
 ];

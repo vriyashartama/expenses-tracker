@@ -4,8 +4,8 @@
   "description": "Personal finance tracker for managing income, expenses, savings, and investments",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0a0a0a",
-  "theme_color": "#2d4a2d",
+  "background_color": "#faf8f5",
+  "theme_color": "#6b7d4a",
   "orientation": "portrait-primary",
   "icons": [
     {

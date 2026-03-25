@@ -15,7 +15,7 @@ import {
   formatCurrency, groupBySubcategory, getMonthsInYear,
 } from '@/lib/utils';
 
-const CHART_COLORS = ['#f0a83a', '#d07e6a', '#b86450', '#538ba0', '#7ea8b8', '#9a8b72', '#e8932a'];
+const CHART_COLORS = ['#6b7d4a', '#d47d52', '#bf6438', '#506180', '#9070ad', '#9c8c74', '#8a9f62'];
 const MONTHS_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 export default function Analytics() {
@@ -75,9 +75,9 @@ export default function Analytics() {
   const expenseTx = useMemo(() => activeTx.filter((t) => ['bills', 'expenses'].includes(t.category)), [activeTx]);
 
   const pieConfig = useMemo(() => Object.fromEntries(pieData.map((d) => [d.name, { label: d.name, color: d.fill }])), [pieData]);
-  const barConfig = { Income: { color: '#f0a83a' }, Bills: { color: '#d07e6a' }, Expenses: { color: '#b86450' }, Savings: { color: '#538ba0' }, Investments: { color: '#7ea8b8' } };
+  const barConfig = { Income: { color: '#6b7d4a' }, Bills: { color: '#d47d52' }, Expenses: { color: '#bf6438' }, Savings: { color: '#506180' }, Investments: { color: '#9070ad' } };
   const subBarConfig = useMemo(() => Object.fromEntries(subData.map((d) => [d.name, { label: d.name, color: d.fill }])), [subData]);
-  const radarConfig = { amount: { label: 'Amount', color: '#f0a83a' } };
+  const radarConfig = { amount: { label: 'Amount', color: '#6b7d4a' } };
 
   return (
     <div className="space-y-6">
@@ -172,11 +172,11 @@ export default function Analytics() {
                 <XAxis dataKey="month" tick={{ fill: 'var(--muted-foreground)', fontSize: 12 }} />
                 <YAxis tick={{ fill: 'var(--muted-foreground)', fontSize: 11 }} tickFormatter={(v) => `${(v / 1e6).toFixed(0)}M`} />
                 <ChartTooltip content={<ChartTooltipContent formatter={(value) => formatCurrency(value)} />} />
-                <Bar dataKey="Income" fill="#f0a83a" radius={[2, 2, 0, 0]} />
-                <Bar dataKey="Bills" fill="#d07e6a" radius={[2, 2, 0, 0]} />
-                <Bar dataKey="Expenses" fill="#b86450" radius={[2, 2, 0, 0]} />
-                <Bar dataKey="Savings" fill="#538ba0" radius={[2, 2, 0, 0]} />
-                <Bar dataKey="Investments" fill="#7ea8b8" radius={[2, 2, 0, 0]} />
+                <Bar dataKey="Income" fill="#6b7d4a" radius={[2, 2, 0, 0]} />
+                <Bar dataKey="Bills" fill="#d47d52" radius={[2, 2, 0, 0]} />
+                <Bar dataKey="Expenses" fill="#bf6438" radius={[2, 2, 0, 0]} />
+                <Bar dataKey="Savings" fill="#506180" radius={[2, 2, 0, 0]} />
+                <Bar dataKey="Investments" fill="#9070ad" radius={[2, 2, 0, 0]} />
               </BarChart>
             </ChartContainer>
           </CardContent>
@@ -190,7 +190,7 @@ export default function Analytics() {
                 <PolarGrid stroke="var(--border)" />
                 <PolarAngleAxis dataKey="category" tick={{ fill: 'var(--muted-foreground)', fontSize: 11 }} />
                 <PolarRadiusAxis tick={{ fill: 'var(--muted-foreground)', fontSize: 10 }} />
-                <Radar name="Amount" dataKey="amount" stroke="#f0a83a" fill="#f0a83a" fillOpacity={0.3} />
+                <Radar name="Amount" dataKey="amount" stroke="#6b7d4a" fill="#6b7d4a" fillOpacity={0.3} />
                 <ChartTooltip content={<ChartTooltipContent formatter={(value) => formatCurrency(value)} />} />
               </RadarChart>
             </ChartContainer>

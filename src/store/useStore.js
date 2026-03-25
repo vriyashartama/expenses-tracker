@@ -3,11 +3,11 @@ import { persist } from 'zustand/middleware';
 import { generateId } from '@/lib/utils';
 
 const DEFAULT_ACCOUNTS = [
-  { id: 'nobu', name: 'Nobu', type: 'Salary', color: '#f0a83a' },
-  { id: 'bca', name: 'BCA', type: 'Spending', color: '#d07e6a' },
-  { id: 'jenius', name: 'Jenius', type: 'Savings', color: '#538ba0' },
-  { id: 'mandiri', name: 'Mandiri', type: 'Insurance & E-Money', color: '#e8932a' },
-  { id: 'bibit', name: 'Bibit', type: 'Investment', color: '#7ea8b8' },
+  { id: 'nobu', name: 'Nobu', type: 'Salary', color: '#6b7d4a' },
+  { id: 'bca', name: 'BCA', type: 'Spending', color: '#d47d52' },
+  { id: 'jenius', name: 'Jenius', type: 'Savings', color: '#506180' },
+  { id: 'mandiri', name: 'Mandiri', type: 'Insurance & E-Money', color: '#8a9f62' },
+  { id: 'bibit', name: 'Bibit', type: 'Investment', color: '#9070ad' },
 ];
 
 const useStore = create(

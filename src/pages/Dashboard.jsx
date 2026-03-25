@@ -15,7 +15,7 @@ import {
   groupBySubcategory, getMonthsInYear, getAccountBalance,
 } from '@/lib/utils';
 
-const CHART_COLORS = ['#d07e6a', '#b86450', '#538ba0', '#7ea8b8', '#9a8b72', '#f0a83a', '#e8932a'];
+const CHART_COLORS = ['#d47d52', '#bf6438', '#506180', '#9070ad', '#9c8c74', '#6b7d4a', '#8a9f62'];
 const MONTHS_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 export default function Dashboard() {
@@ -57,7 +57,7 @@ export default function Dashboard() {
   }, [monthTx]);
 
   const pieConfig = useMemo(() => Object.fromEntries(categoryData.map((d) => [d.name, { label: d.name, color: d.fill }])), [categoryData]);
-  const areaConfig = { Income: { color: '#f0a83a' }, Expenses: { color: '#d07e6a' } };
+  const areaConfig = { Income: { color: '#6b7d4a' }, Expenses: { color: '#d47d52' } };
 
   return (
     <div className="space-y-6">
@@ -69,7 +69,7 @@ export default function Dashboard() {
         <MonthPicker value={currentMonth} onChange={setCurrentMonth} />
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         {[
           { label: 'Income', value: totals.income, color: 'text-chart-1', icon: TrendingUp, bg: 'bg-chart-1/15' },
           { label: 'Expenses', value: totals.expenses, color: 'text-destructive', icon: TrendingDown, bg: 'bg-destructive/15' },
@@ -77,15 +77,15 @@ export default function Dashboard() {
           { label: 'Investments', value: totals.investments, color: 'text-chart-4', icon: Landmark, bg: 'bg-chart-4/15' },
           { label: 'Net Balance', value: totals.net, color: totals.net >= 0 ? 'text-chart-1' : 'text-destructive', icon: DollarSign, bg: 'bg-muted' },
         ].map(({ label, value, color, icon: Icon, bg }) => (
-          <Card key={label}>
-            <CardContent className="pt-5">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">{label}</p>
-                  <p className={`text-xl font-bold tabular-nums ${color}`}>{formatCurrency(value)}</p>
+          <Card key={label} className={label === 'Net Balance' ? 'col-span-2 sm:col-span-1' : ''}>
+            <CardContent className="pt-4 pb-4">
+              <div className="flex items-center gap-3">
+                <div className={`w-9 h-9 rounded-xl ${bg} flex items-center justify-center shrink-0`}>
+                  <Icon size={16} className={color} />
                 </div>
-                <div className={`w-9 h-9 rounded-xl ${bg} flex items-center justify-center`}>
-                  <Icon size={18} className={color} />
+                <div className="min-w-0">
+                  <p className="text-[11px] text-muted-foreground uppercase tracking-wider">{label}</p>
+                  <p className={`text-base sm:text-lg font-bold tabular-nums truncate ${color}`}>{formatCurrency(value)}</p>
                 </div>
               </div>
             </CardContent>
@@ -99,9 +99,9 @@ export default function Dashboard() {
           <CardContent>
             <div className="grid grid-cols-3 gap-4">
               {[
-                { label: 'Expenses', val: totals.expenses, color: '#d07e6a' },
-                { label: 'Savings', val: totals.savings, color: '#538ba0' },
-                { label: 'Investments', val: totals.investments, color: '#7ea8b8' },
+                { label: 'Expenses', val: totals.expenses, color: '#d47d52' },
+                { label: 'Savings', val: totals.savings, color: '#506180' },
+                { label: 'Investments', val: totals.investments, color: '#9070ad' },
               ].map(({ label, val, color }) => {
                 const p = Math.round((val / totals.income) * 100);
                 return (
@@ -185,20 +185,20 @@ export default function Dashboard() {
             <AreaChart data={trendData}>
               <defs>
                 <linearGradient id="incomeGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#f0a83a" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#f0a83a" stopOpacity={0} />
+                  <stop offset="5%" stopColor="#6b7d4a" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="#6b7d4a" stopOpacity={0} />
                 </linearGradient>
                 <linearGradient id="expenseGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#d07e6a" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#d07e6a" stopOpacity={0} />
+                  <stop offset="5%" stopColor="#d47d52" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="#d47d52" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
               <XAxis dataKey="month" tick={{ fill: 'var(--muted-foreground)', fontSize: 12 }} axisLine={false} />
               <YAxis tick={{ fill: 'var(--muted-foreground)', fontSize: 12 }} axisLine={false} tickFormatter={(v) => `${(v / 1e6).toFixed(0)}M`} />
               <ChartTooltip content={<ChartTooltipContent formatter={(value) => formatCurrency(value)} />} />
-              <Area type="monotone" dataKey="Income" stroke="#f0a83a" fill="url(#incomeGrad)" strokeWidth={2} />
-              <Area type="monotone" dataKey="Expenses" stroke="#d07e6a" fill="url(#expenseGrad)" strokeWidth={2} />
+              <Area type="monotone" dataKey="Income" stroke="#6b7d4a" fill="url(#incomeGrad)" strokeWidth={2} />
+              <Area type="monotone" dataKey="Expenses" stroke="#d47d52" fill="url(#expenseGrad)" strokeWidth={2} />
             </AreaChart>
           </ChartContainer>
         </CardContent>

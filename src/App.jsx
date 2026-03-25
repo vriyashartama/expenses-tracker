@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route, NavLink, useLocation } from 'react-router
 import { useState, useRef } from 'react';
 import {
   LayoutDashboard, ArrowLeftRight, PieChart, Target,
-  FileText, Menu, Download, Upload, HardDriveDownload, X, Wallet,
+  FileText, Menu, Download, Upload, HardDriveDownload, X, Wallet, Sun, Moon,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -17,6 +17,7 @@ import Accounts from '@/pages/Accounts';
 import useStore from '@/store/useStore';
 import { exportToExcel } from '@/lib/excel';
 import { cn } from '@/lib/utils';
+import useTheme from '@/hooks/useTheme';
 
 const NAV_ITEMS = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard },
@@ -67,11 +68,11 @@ function SidebarNav({ onNavigate }) {
 function DesktopSidebar() {
   return (
     <aside className="hidden lg:flex flex-col w-64 border-r border-border bg-background">
-      <div className="flex items-center gap-2.5 p-5">
-        <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-          <span className="text-sm font-bold text-primary-foreground">P</span>
+      <div className="flex items-center gap-3 p-5">
+        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+          <span className="text-sm font-bold text-primary">P</span>
         </div>
-        <span className="text-lg font-bold tracking-tight">Penny</span>
+        <span className="text-lg font-bold tracking-tight font-serif">Penny</span>
       </div>
       <Separator />
       <SidebarNav />
@@ -97,11 +98,11 @@ function MobileSidebar() {
       </SheetTrigger>
       <SheetContent side="left" className="w-64 p-0">
         <SheetTitle className="sr-only">Navigation</SheetTitle>
-        <div className="flex items-center gap-2.5 p-5">
-          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-            <span className="text-sm font-bold text-primary-foreground">P</span>
+        <div className="flex items-center gap-3 p-5">
+          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+            <span className="text-sm font-bold text-primary">P</span>
           </div>
-          <span className="text-lg font-bold tracking-tight">Penny</span>
+          <span className="text-lg font-bold tracking-tight font-serif">Penny</span>
         </div>
         <Separator />
         <SidebarNav onNavigate={() => setOpen(false)} />
@@ -119,6 +120,7 @@ function MobileSidebar() {
 function AppShell() {
   const location = useLocation();
   const { transactions, accounts, exportData, importData } = useStore();
+  const { theme, toggle: toggleTheme } = useTheme();
   const title = PAGE_TITLES[location.pathname] || 'Penny';
   const fileInputRef = useRef(null);
 
@@ -162,12 +164,16 @@ function AppShell() {
     <div className="flex h-screen overflow-hidden">
       <DesktopSidebar />
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <header className="flex items-center justify-between px-4 py-3 lg:px-6 border-b border-border bg-background/80 backdrop-blur-sm sticky top-0 z-30">
+        <header className="flex items-center justify-between px-4 py-3 lg:px-6 border-b border-border bg-background/90 backdrop-blur-sm sticky top-0 z-30">
           <div className="flex items-center gap-3">
             <MobileSidebar />
             <h1 className="text-lg font-bold">{title}</h1>
           </div>
           <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={toggleTheme} className="gap-1.5">
+              {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
+              <span className="hidden sm:inline">{theme === 'dark' ? 'Light' : 'Dark'}</span>
+            </Button>
             <Button variant="outline" size="sm" onClick={handleExportData}>
               <HardDriveDownload size={14} />
               <span className="hidden sm:inline">Backup</span>
