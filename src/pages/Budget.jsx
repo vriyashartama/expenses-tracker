@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { format } from 'date-fns';
-import { Target, Save } from 'lucide-react';
+import { Target, Save, TrendingUp, TrendingDown, Wallet, AlertTriangle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -17,16 +17,22 @@ export default function Budget() {
 
   const monthTx = useMemo(() => filterTransactionsByMonth(transactions, currentMonth), [transactions, currentMonth]);
 
+  const income = useMemo(() =>
+    monthTx.filter((t) => t.category === 'income').reduce((s, t) => s + t.amount, 0),
+  [monthTx]);
+
   const budgetCategories = useMemo(() =>
     Object.entries(CATEGORIES)
-      .filter(([key]) => key !== 'income')
+      .filter(([key]) => key !== 'income' && key !== 'transfer')
       .map(([key, cat]) => {
         const spent = monthTx.filter((t) => t.category === key).reduce((s, t) => s + t.amount, 0);
         const budgetAmt = budgets[currentMonth]?.[key] || 0;
+        const pctSpent = budgetAmt > 0 ? Math.round((spent / budgetAmt) * 100) : 0;
         return {
           key, label: cat.label, color: cat.color, spent, budget: budgetAmt,
           remaining: budgetAmt - spent,
-          pct: budgetAmt > 0 ? Math.min(Math.round((spent / budgetAmt) * 100), 100) : 0,
+          pct: Math.min(pctSpent, 100),
+          pctRaw: pctSpent,
           isOver: spent > budgetAmt && budgetAmt > 0,
         };
       }),
@@ -35,6 +41,8 @@ export default function Budget() {
   const totalBudget = budgetCategories.reduce((s, c) => s + c.budget, 0);
   const totalSpent = budgetCategories.reduce((s, c) => s + c.spent, 0);
   const totalPct = totalBudget > 0 ? Math.min(Math.round((totalSpent / totalBudget) * 100), 100) : 0;
+  const unallocated = income - totalBudget;
+  const budgetPctOfIncome = income > 0 ? Math.round((totalBudget / income) * 100) : 0;
 
   const handleSave = (categoryKey) => {
     setBudget(currentMonth, categoryKey, parseFloat(editingBudgets[categoryKey]) || 0);
@@ -51,6 +59,65 @@ export default function Budget() {
         <MonthPicker value={currentMonth} onChange={setCurrentMonth} />
       </div>
 
+      {/* Income & Allocation Summary */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="pt-5">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Income</p>
+                <p className="text-xl font-bold tabular-nums text-chart-1">{formatCurrency(income)}</p>
+              </div>
+              <div className="w-9 h-9 rounded-xl bg-chart-1/15 flex items-center justify-center">
+                <TrendingUp size={18} className="text-chart-1" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-5">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Total Budget</p>
+                <p className="text-xl font-bold tabular-nums">{formatCurrency(totalBudget)}</p>
+              </div>
+              <div className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center">
+                <Target size={18} className="text-muted-foreground" />
+              </div>
+            </div>
+            {income > 0 && <p className="text-xs text-muted-foreground mt-1">{budgetPctOfIncome}% of income</p>}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-5">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Total Spent</p>
+                <p className={`text-xl font-bold tabular-nums ${totalSpent > totalBudget && totalBudget > 0 ? 'text-destructive' : ''}`}>{formatCurrency(totalSpent)}</p>
+              </div>
+              <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${totalSpent > totalBudget && totalBudget > 0 ? 'bg-destructive/15' : 'bg-muted'}`}>
+                <TrendingDown size={18} className={totalSpent > totalBudget && totalBudget > 0 ? 'text-destructive' : 'text-muted-foreground'} />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-5">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Unallocated</p>
+                <p className={`text-xl font-bold tabular-nums ${unallocated < 0 ? 'text-destructive' : 'text-chart-1'}`}>{formatCurrency(unallocated)}</p>
+              </div>
+              <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${unallocated < 0 ? 'bg-destructive/15' : 'bg-chart-1/15'}`}>
+                <Wallet size={18} className={unallocated < 0 ? 'text-destructive' : 'text-chart-1'} />
+              </div>
+            </div>
+            {unallocated < 0 && <p className="text-xs text-destructive mt-1 flex items-center gap-1"><AlertTriangle size={10} /> Over-allocated</p>}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Overall Progress */}
       <Card>
         <CardContent className="pt-5">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
@@ -91,7 +158,11 @@ export default function Budget() {
 
                 <div className="flex justify-between text-sm mb-2">
                   <span className="text-muted-foreground">{formatCurrency(cat.spent)} spent</span>
-                  <span className="text-muted-foreground">{cat.budget > 0 ? `${cat.pct}%` : 'No budget set'}</span>
+                  <span className="text-muted-foreground">
+                    {cat.budget > 0
+                      ? cat.pctRaw > 100 ? `${cat.pctRaw}% (over!)` : `${cat.pct}%`
+                      : 'No budget set'}
+                  </span>
                 </div>
 
                 <div className="h-2 rounded-full overflow-hidden mb-3">
