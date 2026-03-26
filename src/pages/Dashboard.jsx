@@ -1,10 +1,12 @@
 import { useState, useMemo } from 'react';
 import { format } from 'date-fns';
-import { TrendingUp, TrendingDown, PiggyBank, DollarSign, Landmark } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { TrendingUp, TrendingDown, PiggyBank, DollarSign, Landmark, Plus } from 'lucide-react';
 import {
   PieChart, Pie, Cell, AreaChart, Area, XAxis, YAxis, CartesianGrid,
 } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import MonthPicker from '@/components/ui/month-picker';
@@ -21,6 +23,7 @@ const MONTHS_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'S
 export default function Dashboard() {
   const { transactions, accounts } = useStore();
   const [currentMonth, setCurrentMonth] = useState(format(new Date(), 'yyyy-MM'));
+  const navigate = useNavigate();
 
   const monthTx = useMemo(() => filterTransactionsByMonth(transactions, currentMonth), [transactions, currentMonth]);
   const totals = useMemo(() => calculateTotals(monthTx), [monthTx]);
@@ -92,6 +95,23 @@ export default function Dashboard() {
           </Card>
         ))}
       </div>
+
+      {monthTx.length === 0 && (
+        <Card className="border-dashed">
+          <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+            <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
+              <Plus size={24} className="text-primary" />
+            </div>
+            <h3 className="text-base font-semibold mb-1">No transactions yet</h3>
+            <p className="text-sm text-muted-foreground mb-4 max-w-xs">
+              Start tracking your finances by adding your first transaction for this month.
+            </p>
+            <Button onClick={() => navigate('/transactions')} className="gap-1.5">
+              <Plus size={16} /> Add Transaction
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       {totals.income > 0 && (
         <Card>

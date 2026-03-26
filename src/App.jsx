@@ -168,7 +168,7 @@ function AppShell() {
         <header className="flex items-center justify-between px-4 py-3 lg:px-6 border-b border-border bg-background/90 backdrop-blur-sm sticky top-0 z-30">
           <div className="flex items-center gap-3">
             <MobileSidebar />
-            <h1 className="text-lg font-bold">{title}</h1>
+            <h1 className="hidden lg:block text-lg font-bold">{title}</h1>
           </div>
           <div data-tour="header-actions" className="flex items-center gap-2">
             <TourTrigger />
