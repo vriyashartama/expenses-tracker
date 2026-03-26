@@ -66,10 +66,10 @@ export default function Dashboard() {
           <h2 className="text-2xl font-bold">Dashboard</h2>
           <p className="text-sm text-muted-foreground mt-0.5">Your financial overview at a glance</p>
         </div>
-        <MonthPicker value={currentMonth} onChange={setCurrentMonth} />
+        <div data-tour="month-picker"><MonthPicker value={currentMonth} onChange={setCurrentMonth} /></div>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+      <div data-tour="stat-cards" className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         {[
           { label: 'Income', value: totals.income, color: 'text-chart-1', icon: TrendingUp, bg: 'bg-chart-1/15' },
           { label: 'Expenses', value: totals.expenses, color: 'text-destructive', icon: TrendingDown, bg: 'bg-destructive/15' },
@@ -123,7 +123,7 @@ export default function Dashboard() {
         </Card>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div data-tour="charts" className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card>
           <CardHeader className="pb-2"><CardTitle className="text-sm">Spending Breakdown</CardTitle></CardHeader>
           <CardContent>

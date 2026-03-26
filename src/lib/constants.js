@@ -50,3 +50,11 @@ export const ACCOUNT_COLORS = [
   '#6b7d4a', '#d47d52', '#506180', '#9070ad', '#bf6438',
   '#8a9f62', '#9c8c74', '#755691', '#687a9a', '#b8a992',
 ];
+
+export function getSubcategories(categoryKey, customSubcategories = {}) {
+  const defaults = CATEGORIES[categoryKey]?.subcategories || [];
+  const custom = customSubcategories[categoryKey] || [];
+  const withoutOther = defaults.filter((s) => s !== 'Other');
+  const hasOther = defaults.includes('Other');
+  return [...withoutOther, ...custom, ...(hasOther ? ['Other'] : [])];
+}

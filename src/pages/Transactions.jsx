@@ -21,7 +21,7 @@ import { Separator } from '@/components/ui/separator';
 import MonthPicker from '@/components/ui/month-picker';
 import CurrencyInput from '@/components/ui/currency-input';
 import useStore from '@/store/useStore';
-import { CATEGORIES, CATEGORY_LIST } from '@/lib/constants';
+import { CATEGORIES, CATEGORY_LIST, getSubcategories } from '@/lib/constants';
 import { filterTransactionsByMonth, formatCurrency, formatDate, getAccountBalance, cn } from '@/lib/utils';
 
 const INITIAL_FORM = {
@@ -39,7 +39,7 @@ function FieldError({ message }) {
 }
 
 function TransactionFormDialog({ open, onOpenChange, transaction, onSubmit }) {
-  const { accounts } = useStore();
+  const { accounts, customSubcategories } = useStore();
   const isEditing = !!transaction;
   const [form, setForm] = useState(
     transaction
@@ -49,7 +49,7 @@ function TransactionFormDialog({ open, onOpenChange, transaction, onSubmit }) {
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
 
-  const subcategories = form.category ? CATEGORIES[form.category]?.subcategories || [] : [];
+  const subcategories = form.category ? getSubcategories(form.category, customSubcategories) : [];
   const selectedCat = CATEGORIES[form.category];
   const selectedAccount = accounts.find((a) => a.id === form.account);
 
@@ -388,7 +388,7 @@ export default function Transactions() {
         </div>
         <div className="flex items-center gap-3">
           <MonthPicker value={currentMonth} onChange={setCurrentMonth} />
-          <Button onClick={openNew}><Plus size={16} /> Add</Button>
+          <Button data-tour="add-transaction" onClick={openNew}><Plus size={16} /> Add</Button>
         </div>
       </div>
 
@@ -407,7 +407,7 @@ export default function Transactions() {
         </Card>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-3">
+      <div data-tour="search-filter" className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -428,7 +428,7 @@ export default function Transactions() {
         </Select>
       </div>
 
-      <Card>
+      <Card data-tour="transaction-list">
         <CardContent className="p-2">
           {filtered.length > 0 ? (
             <div className="divide-y divide-border/50">

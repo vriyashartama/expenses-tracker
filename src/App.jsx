@@ -17,6 +17,7 @@ import Accounts from '@/pages/Accounts';
 import useStore from '@/store/useStore';
 import { exportToExcel } from '@/lib/excel';
 import { cn } from '@/lib/utils';
+import Tour, { TourTrigger } from '@/components/Tour';
 import useTheme from '@/hooks/useTheme';
 
 const NAV_ITEMS = [
@@ -169,7 +170,8 @@ function AppShell() {
             <MobileSidebar />
             <h1 className="text-lg font-bold">{title}</h1>
           </div>
-          <div className="flex items-center gap-2">
+          <div data-tour="header-actions" className="flex items-center gap-2">
+            <TourTrigger />
             <Button variant="outline" size="sm" onClick={toggleTheme} className="gap-1.5">
               {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
               <span className="hidden sm:inline">{theme === 'dark' ? 'Light' : 'Dark'}</span>
@@ -205,6 +207,7 @@ function AppShell() {
       </div>
 
       <MobileBottomNav />
+      <Tour />
     </div>
   );
 }

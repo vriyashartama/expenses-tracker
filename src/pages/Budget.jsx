@@ -1,9 +1,24 @@
 import { useState, useMemo } from 'react';
-import { format } from 'date-fns';
-import { Target, Save, TrendingUp, TrendingDown, Wallet, AlertTriangle } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { format, subMonths, parse } from 'date-fns';
+import {
+  Target, Save, TrendingUp, TrendingDown, Wallet, AlertTriangle,
+  Copy, Receipt, RotateCcw, Plus, X, Tags,
+} from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
+} from '@/components/ui/dialog';
+import {
+  Tooltip, TooltipContent, TooltipTrigger,
+} from '@/components/ui/tooltip';
 import CurrencyInput from '@/components/ui/currency-input';
 import MonthPicker from '@/components/ui/month-picker';
 import useStore from '@/store/useStore';
@@ -11,15 +26,36 @@ import { CATEGORIES } from '@/lib/constants';
 import { filterTransactionsByMonth, formatCurrency } from '@/lib/utils';
 
 export default function Budget() {
-  const { transactions, budgets, setBudget } = useStore();
+  const {
+    transactions, budgets, setBudget, budgetSettings, setRolloverEnabled,
+    copyBudgetFromMonth, prefillBudgetFromSpending,
+    customSubcategories, addCustomSubcategory, removeCustomSubcategory,
+  } = useStore();
+
   const [currentMonth, setCurrentMonth] = useState(format(new Date(), 'yyyy-MM'));
   const [editingBudgets, setEditingBudgets] = useState({});
+  const [showCategoryManager, setShowCategoryManager] = useState(false);
+  const [newSubcategory, setNewSubcategory] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('');
+
+  const prevMonthKey = useMemo(() => {
+    const d = parse(currentMonth + '-01', 'yyyy-MM-dd', new Date());
+    return format(subMonths(d, 1), 'yyyy-MM');
+  }, [currentMonth]);
+
+  const prevMonthLabel = useMemo(() => {
+    const d = parse(prevMonthKey + '-01', 'yyyy-MM-dd', new Date());
+    return format(d, 'MMM yyyy');
+  }, [prevMonthKey]);
 
   const monthTx = useMemo(() => filterTransactionsByMonth(transactions, currentMonth), [transactions, currentMonth]);
+  const prevMonthTx = useMemo(() => filterTransactionsByMonth(transactions, prevMonthKey), [transactions, prevMonthKey]);
 
   const income = useMemo(() =>
     monthTx.filter((t) => t.category === 'income').reduce((s, t) => s + t.amount, 0),
   [monthTx]);
+
+  const rolloverEnabled = budgetSettings?.rolloverEnabled || false;
 
   const budgetCategories = useMemo(() =>
     Object.entries(CATEGORIES)
@@ -27,27 +63,61 @@ export default function Budget() {
       .map(([key, cat]) => {
         const spent = monthTx.filter((t) => t.category === key).reduce((s, t) => s + t.amount, 0);
         const budgetAmt = budgets[currentMonth]?.[key] || 0;
-        const pctSpent = budgetAmt > 0 ? Math.round((spent / budgetAmt) * 100) : 0;
+
+        let rollover = 0;
+        if (rolloverEnabled) {
+          const prevBudget = budgets[prevMonthKey]?.[key] || 0;
+          if (prevBudget > 0) {
+            const prevSpent = prevMonthTx
+              .filter((t) => t.category === key)
+              .reduce((s, t) => s + t.amount, 0);
+            rollover = Math.max(0, prevBudget - prevSpent);
+          }
+        }
+
+        const effectiveBudget = budgetAmt + rollover;
+        const pctSpent = effectiveBudget > 0 ? Math.round((spent / effectiveBudget) * 100) : 0;
         return {
           key, label: cat.label, color: cat.color, spent, budget: budgetAmt,
-          remaining: budgetAmt - spent,
+          rollover, effectiveBudget,
+          remaining: effectiveBudget - spent,
           pct: Math.min(pctSpent, 100),
           pctRaw: pctSpent,
-          isOver: spent > budgetAmt && budgetAmt > 0,
+          isOver: spent > effectiveBudget && effectiveBudget > 0,
         };
       }),
-  [monthTx, budgets, currentMonth]);
+  [monthTx, budgets, currentMonth, rolloverEnabled, prevMonthTx, prevMonthKey]);
 
-  const totalBudget = budgetCategories.reduce((s, c) => s + c.budget, 0);
+  const totalSetBudget = budgetCategories.reduce((s, c) => s + c.budget, 0);
+  const totalRollover = budgetCategories.reduce((s, c) => s + c.rollover, 0);
+  const totalBudget = budgetCategories.reduce((s, c) => s + c.effectiveBudget, 0);
   const totalSpent = budgetCategories.reduce((s, c) => s + c.spent, 0);
   const totalPct = totalBudget > 0 ? Math.min(Math.round((totalSpent / totalBudget) * 100), 100) : 0;
-  const unallocated = income - totalBudget;
-  const budgetPctOfIncome = income > 0 ? Math.round((totalBudget / income) * 100) : 0;
+  const unallocated = income - totalSetBudget;
+  const budgetPctOfIncome = income > 0 ? Math.round((totalSetBudget / income) * 100) : 0;
+
+  const hasPrevMonthBudget = !!budgets[prevMonthKey] && Object.keys(budgets[prevMonthKey]).length > 0;
 
   const handleSave = (categoryKey) => {
     setBudget(currentMonth, categoryKey, parseFloat(editingBudgets[categoryKey]) || 0);
     setEditingBudgets((prev) => { const next = { ...prev }; delete next[categoryKey]; return next; });
   };
+
+  const handleAddSubcategory = () => {
+    if (!selectedCategory || !newSubcategory.trim()) return;
+    const name = newSubcategory.trim();
+    const existing = [
+      ...(CATEGORIES[selectedCategory]?.subcategories || []),
+      ...(customSubcategories[selectedCategory] || []),
+    ];
+    if (existing.some((s) => s.toLowerCase() === name.toLowerCase())) return;
+    addCustomSubcategory(selectedCategory, name);
+    setNewSubcategory('');
+  };
+
+  const allCustom = Object.entries(customSubcategories).flatMap(([cat, subs]) =>
+    subs.map((s) => ({ category: cat, name: s, label: CATEGORIES[cat]?.label || cat }))
+  );
 
   return (
     <div className="space-y-6">
@@ -59,8 +129,64 @@ export default function Budget() {
         <MonthPicker value={currentMonth} onChange={setCurrentMonth} />
       </div>
 
+      {/* Quick Actions */}
+      <div data-tour="budget-actions" className="flex flex-wrap items-center gap-2">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant={rolloverEnabled ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setRolloverEnabled(!rolloverEnabled)}
+            >
+              <RotateCcw size={14} className="mr-1.5" />
+              Rollover {rolloverEnabled ? 'On' : 'Off'}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Carry unused budget from previous month</TooltipContent>
+        </Tooltip>
+
+        {hasPrevMonthBudget && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="outline" size="sm" onClick={() => copyBudgetFromMonth(prevMonthKey, currentMonth)}>
+                <Copy size={14} className="mr-1.5" /> Copy Last Month
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Copy budget allocations from {prevMonthLabel}</TooltipContent>
+          </Tooltip>
+        )}
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button variant="outline" size="sm" onClick={() => prefillBudgetFromSpending(prevMonthKey, currentMonth)}>
+              <Receipt size={14} className="mr-1.5" /> Use Last Month's Actuals
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Set budget based on actual spending from {prevMonthLabel}</TooltipContent>
+        </Tooltip>
+
+        <Button variant="outline" size="sm" onClick={() => setShowCategoryManager(true)}>
+          <Tags size={14} className="mr-1.5" /> Manage Categories
+        </Button>
+      </div>
+
+      {/* Rollover Banner */}
+      {rolloverEnabled && totalRollover > 0 && (
+        <Card className="border-dashed border-chart-1/50 bg-chart-1/5">
+          <CardContent className="pt-4 pb-4">
+            <div className="flex items-center gap-2">
+              <RotateCcw size={16} className="text-chart-1" />
+              <p className="text-sm">
+                <span className="font-medium text-chart-1">{formatCurrency(totalRollover)}</span>
+                {' '}rolled over from {prevMonthLabel}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Income & Allocation Summary */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div data-tour="budget-summary" className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardContent className="pt-5">
             <div className="flex items-start justify-between">
@@ -85,7 +211,12 @@ export default function Budget() {
                 <Target size={18} className="text-muted-foreground" />
               </div>
             </div>
-            {income > 0 && <p className="text-xs text-muted-foreground mt-1">{budgetPctOfIncome}% of income</p>}
+            <div className="flex flex-col gap-0.5 mt-1">
+              {income > 0 && <p className="text-xs text-muted-foreground">{budgetPctOfIncome}% of income</p>}
+              {rolloverEnabled && totalRollover > 0 && (
+                <p className="text-xs text-chart-1">+{formatCurrency(totalRollover)} rollover</p>
+              )}
+            </div>
           </CardContent>
         </Card>
         <Card>
@@ -142,7 +273,7 @@ export default function Budget() {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div data-tour="budget-cards" className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {budgetCategories.map((cat) => {
           const isEditing = cat.key in editingBudgets;
           return (
@@ -159,7 +290,7 @@ export default function Budget() {
                 <div className="flex justify-between text-sm mb-2">
                   <span className="text-muted-foreground">{formatCurrency(cat.spent)} spent</span>
                   <span className="text-muted-foreground">
-                    {cat.budget > 0
+                    {cat.effectiveBudget > 0
                       ? cat.pctRaw > 100 ? `${cat.pctRaw}% (over!)` : `${cat.pct}%`
                       : 'No budget set'}
                   </span>
@@ -184,9 +315,25 @@ export default function Budget() {
                   )}
                 </div>
 
-                {cat.budget > 0 && (
+                {cat.rollover > 0 && (
+                  <p className="text-xs text-chart-1 mt-2 flex items-center gap-1">
+                    <RotateCcw size={10} />
+                    +{formatCurrency(cat.rollover)} rollover
+                    <span className="text-muted-foreground">
+                      (effective: {formatCurrency(cat.effectiveBudget)})
+                    </span>
+                  </p>
+                )}
+
+                {cat.effectiveBudget > 0 && cat.rollover === 0 && (
                   <p className={`text-xs mt-2 ${cat.isOver ? 'text-destructive' : 'text-muted-foreground'}`}>
-                    {cat.isOver ? `${formatCurrency(cat.spent - cat.budget)} over budget` : `${formatCurrency(cat.remaining)} remaining`}
+                    {cat.isOver ? `${formatCurrency(cat.spent - cat.effectiveBudget)} over budget` : `${formatCurrency(cat.remaining)} remaining`}
+                  </p>
+                )}
+
+                {cat.effectiveBudget > 0 && cat.rollover > 0 && (
+                  <p className={`text-xs mt-1 ${cat.isOver ? 'text-destructive' : 'text-muted-foreground'}`}>
+                    {cat.isOver ? `${formatCurrency(cat.spent - cat.effectiveBudget)} over budget` : `${formatCurrency(cat.remaining)} remaining`}
                   </p>
                 )}
               </CardContent>
@@ -194,6 +341,68 @@ export default function Budget() {
           );
         })}
       </div>
+
+      {/* Custom Category Manager Dialog */}
+      <Dialog open={showCategoryManager} onOpenChange={setShowCategoryManager}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Manage Custom Categories</DialogTitle>
+            <DialogDescription>Add or remove custom subcategories for any category</DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="flex gap-2">
+              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                <SelectTrigger className="w-[140px]">
+                  <SelectValue placeholder="Category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(CATEGORIES)
+                    .filter(([key]) => key !== 'transfer')
+                    .map(([key, cat]) => (
+                      <SelectItem key={key} value={key}>{cat.label}</SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+              <Input
+                placeholder="New subcategory name"
+                value={newSubcategory}
+                onChange={(e) => setNewSubcategory(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleAddSubcategory()}
+                className="flex-1"
+              />
+              <Button size="sm" onClick={handleAddSubcategory} disabled={!selectedCategory || !newSubcategory.trim()}>
+                <Plus size={14} />
+              </Button>
+            </div>
+
+            {allCustom.length > 0 ? (
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground">Custom subcategories</Label>
+                <div className="flex flex-wrap gap-2">
+                  {allCustom.map((item) => (
+                    <Badge key={`${item.category}-${item.name}`} variant="secondary" className="gap-1 pr-1">
+                      <span className="w-2 h-2 rounded-full" style={{ backgroundColor: CATEGORIES[item.category]?.color }} />
+                      {item.name}
+                      <span className="text-muted-foreground text-[10px]">({item.label})</span>
+                      <button
+                        onClick={() => removeCustomSubcategory(item.category, item.name)}
+                        className="ml-1 hover:text-destructive rounded-sm p-0.5"
+                      >
+                        <X size={12} />
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground text-center py-4">
+                No custom subcategories yet. Add one above!
+              </p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

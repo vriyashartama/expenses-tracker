@@ -16,6 +16,11 @@ const useStore = create(
       transactions: [],
       budgets: {},
       accounts: DEFAULT_ACCOUNTS,
+      customSubcategories: {},
+      budgetSettings: { rolloverEnabled: false },
+      tourCompleted: false,
+
+      setTourCompleted: (completed) => set({ tourCompleted: completed }),
 
       // Account CRUD
       addAccount: (account) =>
@@ -70,17 +75,88 @@ const useStore = create(
         return get().budgets[monthKey]?.[category] || 0;
       },
 
+      // Custom subcategories
+      addCustomSubcategory: (category, name) =>
+        set((state) => {
+          const existing = state.customSubcategories[category] || [];
+          if (existing.includes(name)) return state;
+          return {
+            customSubcategories: {
+              ...state.customSubcategories,
+              [category]: [...existing, name],
+            },
+          };
+        }),
+
+      removeCustomSubcategory: (category, name) =>
+        set((state) => ({
+          customSubcategories: {
+            ...state.customSubcategories,
+            [category]: (state.customSubcategories[category] || []).filter((s) => s !== name),
+          },
+        })),
+
+      // Budget settings
+      setRolloverEnabled: (enabled) =>
+        set((state) => ({
+          budgetSettings: { ...state.budgetSettings, rolloverEnabled: enabled },
+        })),
+
+      // Copy budget from one month to another
+      copyBudgetFromMonth: (fromMonth, toMonth) =>
+        set((state) => {
+          const fromBudget = state.budgets[fromMonth];
+          if (!fromBudget) return state;
+          return {
+            budgets: {
+              ...state.budgets,
+              [toMonth]: { ...fromBudget },
+            },
+          };
+        }),
+
+      // Prefill budget from actual spending
+      prefillBudgetFromSpending: (sourceMonth, targetMonth) =>
+        set((state) => {
+          const sourceTx = state.transactions.filter(
+            (t) => t.date.substring(0, 7) === sourceMonth
+          );
+          const newBudgets = {};
+          ['bills', 'expenses', 'savings', 'investments'].forEach((cat) => {
+            const spent = sourceTx
+              .filter((t) => t.category === cat)
+              .reduce((sum, t) => sum + t.amount, 0);
+            if (spent > 0) newBudgets[cat] = Math.round(spent);
+          });
+          return {
+            budgets: {
+              ...state.budgets,
+              [targetMonth]: { ...state.budgets[targetMonth], ...newBudgets },
+            },
+          };
+        }),
+
       // Data export/import
       exportData: () => {
-        const { transactions, budgets, accounts } = get();
-        return { transactions, budgets, accounts, exportedAt: new Date().toISOString(), version: 1 };
+        const { transactions, budgets, accounts, customSubcategories, budgetSettings } = get();
+        return {
+          transactions, budgets, accounts, customSubcategories, budgetSettings,
+          exportedAt: new Date().toISOString(), version: 2,
+        };
       },
 
       importData: (data) => {
         if (!data || !Array.isArray(data.transactions) || !Array.isArray(data.accounts)) {
           throw new Error('Invalid data format');
         }
-        set({ transactions: data.transactions, accounts: data.accounts, budgets: data.budgets || {} });
+        set({
+          transactions: data.transactions,
+          accounts: data.accounts,
+          budgets: data.budgets || {},
+          customSubcategories: data.customSubcategories || {},
+          budgetSettings: data.budgetSettings || { rolloverEnabled: false },
+          tourCompleted: data.tourCompleted ?? false,
+        });
       },
     }),
     {
